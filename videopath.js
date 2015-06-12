@@ -9,17 +9,17 @@ function handleVideoInfoRequest(req, res) {
     var videoID = req.query.videoID;
 
 
-    db.query("SELECT * from VIDEO_METADATA WHERE VideoId = '"+videoID+"'", function(err, rows, fields) {
+    db.query("SELECT * from VIDEO_METADATA WHERE VideoId = '"+videoID+"' ORDER BY TimeCode", function(err, rows, fields) {
         if (!err) {
             //Which fields do we want/need?
 
             var wayPoints = [];
 
             for (var i = 0; i < rows.length; i++){
-                wayPoints.push({lat:rows[i].Plat,lng:rows[i].Plng,timeCode:rows[i].TimeCode});
+                wayPoints.push({lat:rows[i].Plat,lng:rows[i].Plng});
             }
 
-            wayPoints.sort(function(a, b){return a.timeCode- b.timeCode});
+            //wayPoints.sort(function(a, b){return a.timeCode- b.timeCode});
             res.json(wayPoints);
         } else {
             console.log('Error while performing Query.'+err);
