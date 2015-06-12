@@ -13,7 +13,7 @@
     </script>
     <script type="text/javascript">
         var map;
-        var url = "http://127.0.0.1";
+        var url = "http://127.0.0.1:8080";
         function initialize() {
             var mapOptions = {
                 center: {lat: 48.1510642, lng: 11.5925221},
@@ -27,6 +27,7 @@
         google.maps.event.addDomListener(window, 'load', initialize);
         function requestVideos() {
             alert(getURLfromBounds());
+            console.log(getURLfromBounds());
             /*
              var xmlHttp = new XMLHttpRequest();
              xmlHttp.open( "GET",  url+bounds.getNorthEast()+","+bounds.getSouthWest(), false );
