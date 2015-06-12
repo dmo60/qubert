@@ -16,9 +16,10 @@ function handleVideoInfoRequest(req, res) {
             var wayPoints = [];
 
             for (var i = 0; i < rows.length; i++){
-                wayPoints.push({lat:rows[i].Plat,lng:rows[i].Plng});
+                wayPoints.push({lat:rows[i].Plat,lng:rows[i].Plng,timeCode:rows[i].TimeCode});
             }
 
+            wayPoints.sort(function(a, b){return a.timeCode- b.timeCode});
             res.json(wayPoints);
         } else {
             console.log('Error while performing Query.'+err);
