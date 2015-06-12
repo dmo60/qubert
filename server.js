@@ -6,6 +6,7 @@ var fs      = require('fs');
 var test = require('./test');
 var videos = require('./videos');
 var videoinfo = require('./videoinfo');
+var videometadata = require('./videometadata');
 
 /**
  *  Define the sample application.
@@ -118,6 +119,10 @@ var SampleApp = function() {
 
         self.routes['/videoinfo'] = function(req, res) {
             videoinfo.handleVideoInfoRequest(req, res);
+        };
+
+        self.routes['/videometadata'] = function(req, res) {
+            videometadata.handleVideoInfoRequest(req, res);
         };
     };
 
