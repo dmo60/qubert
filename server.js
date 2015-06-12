@@ -3,6 +3,7 @@
 var express = require('express');
 var fs      = require('fs');
 
+var test = require('./test');
 
 /**
  *  Define the sample application.
@@ -103,6 +104,10 @@ var SampleApp = function() {
         self.routes['/'] = function(req, res) {
             res.setHeader('Content-Type', 'text/html');
             res.send(self.cache_get('index.html') );
+        };
+
+        self.routes['/test'] = function(req, res) {
+            test.handleTest(req, res);
         };
     };
 
