@@ -1,6 +1,6 @@
-var MongoClient = require('mongodb').MongoClient
+var MongoClient = require('mongodb').MongoClient;
 
-function handleTest(req, res) {
+exports.RequestHandler = function (req, res) {
     // Connection URL
     var url = 'mongodb://localhost:27017/qubert';
     // Use connect method to connect to the Server
@@ -14,6 +14,4 @@ function handleTest(req, res) {
         }
         db.close();
     });
-}
-
-exports.handleTest = handleTest;
+};

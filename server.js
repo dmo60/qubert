@@ -100,35 +100,16 @@ var SampleApp = function() {
     self.createRoutes = function() {
         self.routes = { };
 
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
         self.routes['/'] = function(req, res) {
             res.setHeader('Content-Type', 'text/html');
             res.send(self.cache_get('index.html') );
         };
 
-        self.routes['/test'] = function(req, res) {
-            test.handleTest(req, res);
-        };
-
-        self.routes['/videos'] = function(req, res) {
-            videos.handleVideos(req, res);
-        };
-
-        self.routes['/videoinfo'] = function(req, res) {
-            videoinfo.handleVideoInfoRequest(req, res);
-        };
-
-        self.routes['/videometadata'] = function(req, res) {
-            videometadata.handleVideoInfoRequest(req, res);
-        };
-
-        self.routes['/videopath'] = function(req, res) {
-            videopath.handleVideoInfoRequest(req, res);
-        };
+        self.routes['/test'] = test.RequestHandler;
+        self.routes['/videos'] = videos.RequestHandler;
+        self.routes['/videoinfo'] = videoinfo.handleVideoInfoRequest;
+        self.routes['/videometadata'] = videometadata.handleVideoMetaDataRequest;
+        self.routes['/videopath'] = videopath.handleVideoInfoRequest;
     };
 
 
@@ -143,6 +124,11 @@ var SampleApp = function() {
         self.app.use(function(req, res, next) {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            next();
+        });
+
+        self.app.use(function(req, res, next) {
+            console.log("Received request: " + req.url);
             next();
         });
 
@@ -172,7 +158,7 @@ var SampleApp = function() {
     self.start = function() {
         //  Start the app on the specific interface (and port).
         self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
+            console.log('%s: Node server started on %s:%d ...\n',
                         Date(Date.now() ), self.ipaddress, self.port);
         });
     };

@@ -4,7 +4,7 @@
 var database = require("./database");
 var db = database.MySqlConnection;
 
-function handleVideoInfoRequest(req, res) {
+function handleVideoMetaDataRequest(req, res) {
 
     var videoID = req.query.videoID;
 
@@ -21,4 +21,4 @@ function handleVideoInfoRequest(req, res) {
     });
 }
 
-exports.handleVideoInfoRequest = handleVideoInfoRequest;
+exports.handleVideoMetaDataRequest = handleVideoMetaDataRequest;
