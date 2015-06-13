@@ -16,6 +16,7 @@ function handleVideos(req, res) {
 
     db.query(sql, [leftTop[0], rightBottom[0], leftTop[1], rightBottom[1]], function(err, rows, fields) {
         if (!err) {
+            res.setHeader('Content-Type', 'application/json');
             res.json(rows);
         } else {
             console.log('Error while performing Query:' + err);

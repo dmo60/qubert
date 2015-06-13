@@ -26,7 +26,8 @@
 
   "dependencies": {
     "express": "~4.12.4",
-    "mysql": "~2.5.4"
+    "mysql": "~2.5.4",
+    "mongodb": "~2.0"
   },
   "devDependencies": {},
   "bundleDependencies": [],

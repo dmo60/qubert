@@ -1,21 +1,18 @@
-var mysql      = require('mysql');
+var MongoClient = require('mongodb').MongoClient
 
 function handleTest(req, res) {
-    var connection = mysql.createConnection({
-        host     : 'mediaq.dbs.ifi.lmu.de',
-        user     : 'student',
-        password : 'tneduts',
-        database : 'MediaQ_V2'
-    });
-
-    connection.query('SELECT * from VIDEO_INFO', function(err, rows, fields) {
-        connection.end();
+    // Connection URL
+    var url = 'mongodb://localhost:27017/qubert';
+    // Use connect method to connect to the Server
+    MongoClient.connect(url, function(err, db) {
         if (!err) {
-            res.json(rows);
+            console.log("Connected correctly to server");
+            res.send("Connected!");
         } else {
-            console.log('Error while performing Query.');
-            res.send('Database error');
+            console.log(err);
+            res.send("Error!");
         }
+        db.close();
     });
 }
 
