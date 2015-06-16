@@ -1,7 +1,8 @@
 var MongoClient = require("mongodb").MongoClient
     , mysql = require("mysql")
     , async = require("async")
-    , config = require("./config");
+    , config = require("./config")
+    , geoJson = require("./geoJson");
 
 exports.initialize = function (cb) {
     console.log("Initializing mongo database...");
@@ -43,7 +44,7 @@ exports.initialize = function (cb) {
                     mySqlDb.pause();
 
                     // We want the coordinates to be stored as a geo point
-                    row.coords = [row.Plat, row.Plng];
+                    row.location = new geoJson.Point([row.Plng, row.Plat]);
                     delete row.Plat;
                     delete row.Plng;
 
