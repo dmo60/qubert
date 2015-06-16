@@ -26,7 +26,7 @@ exports.initialize = function (cb) {
             });
         },
 
-        // Finally get all video data from the MediaQ server and insert it into Mongo
+        // Get all video data from the MediaQ server and insert it into Mongo
         function (mongoDb, callback) {
             console.log("Getting video data from MediaQ server...");
 
@@ -57,9 +57,21 @@ exports.initialize = function (cb) {
                 })
                 .on("end", function () {
                     mySqlDb.end();
+                    callback(null, mongoDb);
+                });
+        },
+
+        // Create an index on the location property
+        function (mongoDb, callback) {
+            console.log("Creating geo index...");
+            mongoDb.collection("videos").createIndex({location: 1}, null, function (err, indexName) {
+                if (err) {
+                    callback(err);
+                } else {
                     mongoDb.close();
                     callback(null, "Done!");
-                });
+                }
+            });
         }
 
     ], function (err, result) {
