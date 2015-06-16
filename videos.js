@@ -1,4 +1,5 @@
-var db = require("./database").MySqlConnection;
+var mysql = require("mysql");
+var config = require("./config");
 
 var LatLng = function(coords) {
     var tmp = coords.split(',');
@@ -15,6 +16,7 @@ exports.RequestHandler = function (req, res) {
         'FROM VIDEO_METADATA ' +
         'WHERE fovNum=1 AND Plat < ? AND Plat > ? AND Plng < ? AND Plng > ?';
 
+    var db = mysql.createConnection(config.MySql);
     db.query(sql, [leftTop.lat, rightBottom.lat, leftTop.lng, rightBottom.lng], function(err, rows, fields) {
         if (!err) {
             res.setHeader('Content-Type', 'application/json');
@@ -23,5 +25,6 @@ exports.RequestHandler = function (req, res) {
             console.log('Error while performing Query:' + err);
             res.send('Database error');
         }
+        db.end();
     });
 };

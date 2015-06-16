@@ -27,9 +27,12 @@
   "dependencies": {
     "express": "~4.12.4",
     "mysql": "~2.5.4",
-    "mongodb": "~2.0"
+    "mongodb": "~2.0",
+    "async": ""
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mongo-express": "https://github.com/andzdroid/mongo-express"
+  },
   "bundleDependencies": [],
 
   "private": true,

@@ -3,6 +3,9 @@
 var express = require('express');
 var fs      = require('fs');
 
+var mongoExpress = require('./node_modules/mongo-express/middleware');
+var config = require('./config');
+
 var test = require('./test');
 var videos = require('./videos');
 var videoinfo = require('./videoinfo');
@@ -131,6 +134,8 @@ var SampleApp = function() {
             console.log("Received request: " + req.url);
             next();
         });
+
+        self.app.use("/mongo", mongoExpress(config.MongoExpress));
 
         //  Add handlers for the app (from the routes).
         for (var r in self.routes) {
