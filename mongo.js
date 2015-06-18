@@ -64,7 +64,7 @@ exports.initialize = function (cb) {
         // Create an index on the location property
         function (mongoDb, callback) {
             console.log("Creating geo index...");
-            mongoDb.collection("videos").createIndex({location: 1}, null, function (err, indexName) {
+            mongoDb.collection("videos").createIndex({location: "2dsphere"}, null, function (err, indexName) {
                 if (err) {
                     callback(err);
                 } else {
