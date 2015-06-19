@@ -11,7 +11,7 @@ exports.initialize = function (cb) {
         // Connect to the Mongo database
         function (callback) {
             console.log("Connecting to mongo...");
-            MongoClient.connect(config.MongoUrl, function(err, db) {
+            MongoClient.connect(config.MongoUrl, function (err, db) {
                 if (err) {
                     callback(err)
                 } else {
@@ -55,11 +55,11 @@ exports.initialize = function (cb) {
                 "WHERE FovNum=1 AND EXISTS (" +
                 "SELECT * FROM VIDEO_METADATA AS t2 WHERE t1.VideoId=t2.VideoId AND " +
                 "(t1.Plat != t2.Plat OR t1.Plng != t2.Plng) )";
-            mySqlDb.query(sql, function(err, rows) {
+            mySqlDb.query(sql, function (err, rows) {
                 if (err) {
                     callback(err);
                 } else {
-                    rows.forEach(function(video) {
+                    rows.forEach(function (video) {
                         // We want the coordinates to be stored as a geo point
                         video.location = new geoJson.Point(video.Plat, video.Plng);
                         delete video.Plat;
@@ -71,7 +71,7 @@ exports.initialize = function (cb) {
         },
 
         // Load the trajectory for each video
-        function(videos, mongoDb, mySqlDb, callback) {
+        function (videos, mongoDb, mySqlDb, callback) {
             console.log("Loading trajectories for videos...");
             async.each(videos, function (video, callback) {
                 var sql =
@@ -79,13 +79,13 @@ exports.initialize = function (cb) {
                     " FROM VIDEO_METADATA " +
                     "WHERE VideoId=? ORDER BY TimeCode ASC";
 
-                mySqlDb.query(sql, [video.VideoId], function(err, rows) {
+                mySqlDb.query(sql, [video.VideoId], function (err, rows) {
                     if (err) {
                         callback(err);
                     } else {
                         var wayPoints = [];
 
-                        rows.forEach(function(r) {
+                        rows.forEach(function (r) {
                             wayPoints.push([r.Plng, r.Plat, parseInt(r.TimeCode), r.ThetaX, r.ThetaY, r.ThetaZ, r.R, r.Alpha]);
                         });
 
@@ -104,9 +104,9 @@ exports.initialize = function (cb) {
         },
 
         // Insert all videos into mongo
-        function(videos, mongoDb, callback) {
+        function (videos, mongoDb, callback) {
             console.log("Inserting videos into mongo...");
-            mongoDb.collection("videos").insertMany(videos, function(err, reply) {
+            mongoDb.collection("videos").insertMany(videos, function (err, reply) {
                 if (err) {
                     callback(err);
                 } else {

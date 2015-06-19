@@ -112,7 +112,7 @@ var SampleApp = function() {
         self.routes['/videos'] = videos.RequestHandler;
         self.routes['/videoinfo'] = videoinfo.handleVideoInfoRequest;
         self.routes['/videometadata'] = videometadata.handleVideoMetaDataRequest;
-        self.routes['/videopath'] = videopath.handleVideoInfoRequest;
+        self.routes['/videopath'] = videopath.RequestHandler;
     };
 
 

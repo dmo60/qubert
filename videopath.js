@@ -1,32 +1,45 @@
 /**
  * Created by Fabian on 12.06.2015.
  */
-var mysql = require("mysql");
+var MongoClient = require("mongodb").MongoClient;
+var async = require("async");
 var config = require("./config");
 
-function handleVideoInfoRequest(req, res) {
+exports.RequestHandler = function (req, res) {
 
-    var videoID = req.query.videoID;
+    var queryVideoId = req.query.videoID;
 
-    var db = mysql.createConnection(config.MySql);
-    db.query("SELECT * from VIDEO_METADATA WHERE VideoId = '"+videoID+"' ORDER BY TimeCode", function(err, rows, fields) {
-        if (!err) {
-            //Which fields do we want/need?
+    async.waterfall([
+        function (callback) {
+            MongoClient.connect(config.MongoUrl, function (err, db) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, db);
+                }
+            })
+        },
 
-            var wayPoints = [];
-
-            for (var i = 0; i < rows.length; i++){
-                wayPoints.push({lat:rows[i].Plat,lng:rows[i].Plng});
-            }
-
-            //wayPoints.sort(function(a, b){return a.timeCode- b.timeCode});
-            res.json(wayPoints);
-        } else {
-            console.log('Error while performing Query.'+err);
-            res.send('Database error');
+        function (mongoDb, callback) {
+            mongoDb.collection("videos").findOne({VideoId: queryVideoId}, {fields: {trajectory: 1}}, function (err, result) {
+                if (err) {
+                    callback(err);
+                } else {
+                    mongoDb.close();
+                    callback(null, result);
+                }
+            });
         }
-        db.end();
+    ], function (err, result) {
+        if (err) {
+            console.error("Error! " + err);
+            res.send("Database error!");
+        } else {
+            var wayPoints = [];
+            result.trajectory.coordinates.forEach(function (pos) {
+                wayPoints.push({lng: pos[0], lat: pos[1]});
+            });
+            res.json(wayPoints);
+        }
     });
-}
-
-exports.handleVideoInfoRequest = handleVideoInfoRequest;
+};
