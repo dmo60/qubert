@@ -20,7 +20,6 @@ exports.RequestHandler = function (req, res) {
         function (db, callback) {
             var videos = db.collection("videos");
             videos.find({
-                "FovNum": 1,
                 "location": {
                     $geoWithin: {
                         $box: [[leftTop.lng, rightBottom.lat], [rightBottom.lng, leftTop.lat]]

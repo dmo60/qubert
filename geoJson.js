@@ -1,7 +1,7 @@
-exports.Point = function(coords) {
+exports.Point = function(lat, lng) {
     return {
         "type": "Point",
-        "coordinates": coords
+        "coordinates": [lng, lat]
     }
 };
 
