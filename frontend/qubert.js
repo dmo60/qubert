@@ -22,6 +22,7 @@ $(document).ready(function () {
     google.maps.event.addDomListener(window, 'load', initialize);
     function requestVideos() {
         console.log("Bounds changed. Requesting: " + getURLfromBounds());
+        //removeMarkersOutOfBounds();
         ($).get(getURLfromBounds(), function (data) {
             $.each(data, function () {
                 //TODO: delete markers out of bounds
@@ -59,9 +60,14 @@ $(document).ready(function () {
         }
     }
 
-    function removeMarkers() {
+    //TODO: Make this work. Or is it even necessary?
+    function removeMarkersOutOfBounds() {
         for (var i = 0; i < markers.length; i++) {
-            markers[i].setMap(null);
+            if(!map.getBounds().contains(markers[i].getPosition())){
+                markers[i].setMap(null);
+                markers.splice(i,1);
+                i--;
+            }
         }
         markers = [];
     }
