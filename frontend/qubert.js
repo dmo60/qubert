@@ -7,6 +7,11 @@ $(document).ready(function () {
     var route;
     var markers = [];
     var intersectionRoutes = [];
+    var videoMarker;
+
+    var video = $("#video")[0];
+    var canvas = $("#canvas")[0];
+    var ctx = canvas.getContext("2d");
 
     function initialize() {
         var mapOptions = {
@@ -76,9 +81,14 @@ $(document).ready(function () {
         var id = marker.metaData.id;
         console.log("Clicked "+id);
         drawPath(id);
+        videoMarker=new google.maps.Marker({
+            position: marker.getPosition(),
+            map: map
+        });
         makeOtherMarkersTransparent(marker);
         removeIntersectionRoutes();
-        drawIntersectionRoutes(marker.metaData.id);
+        drawIntersectionRoutes(id);
+        playVideo(id);
     }
 
     function makeOtherMarkersTransparent(marker){
@@ -137,10 +147,47 @@ $(document).ready(function () {
         return url + "/videopath?videoID=" + id;
     }
 
+    function updateVideoMarker(){
+        var current = video.currentTime/video.duration;
+        var distance = route.Distance();
+        videoMarker.setPosition(route.GetPointAtDistance(current*distance));
+    }
+
+    function playVideo(id) {
+        $(video).attr("src", getVideoUrl(id));
+        $("#overlay").css("z-index", 2);
+
+        $(video).on("play", function () {
+            $(canvas).width($(video).width());
+            $(canvas).height($(video).height());
+
+            ctx.fillStyle = "red";
+            setVideoProgressCallback();
+        });
+        //video.play();
+    }
+
+    function setVideoProgressCallback() {
+
+
+        if (video.paused || video.ended) {
+            return;
+        }
+        updateVideoMarker();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText(video.currentTime.toString(), 10, 10);
+
+        setTimeout(setVideoProgressCallback, 50);
+
+    }
+
+
+    function getVideoUrl(id) {
+        return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
+    }
+
     function getURLforIntersections(id) {
         return url + "/intersections?videoID=" + id;
     }
 
-
-    //your code here
 });
