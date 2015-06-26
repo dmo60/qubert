@@ -39,6 +39,7 @@ $(document).ready(function () {
                 }
                 var myLatlng = new google.maps.LatLng(this.lat, this.lng);
                 var marker = new google.maps.Marker({
+                    icon:'https://www.google.com/mapfiles/marker_yellow.png',
                     position: myLatlng,
                     map: map
                 });
