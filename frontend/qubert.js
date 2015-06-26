@@ -21,6 +21,7 @@ $(document).ready(function () {
         map = new google.maps.Map(document.getElementById('map-canvas'),
             mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
+        google.maps.event.addListener(map, "click", onMapClicked);
         //requestVideos();
     }
 
@@ -57,6 +58,12 @@ $(document).ready(function () {
         }
         routes = [];
     }
+
+    function removeRoute() {
+        route.setMap(null);
+        route = null;
+    }
+
     function markIntersectionMarker(id) {
         for (var i = 0; i < markers.length; i++) {
             if (markers[i].metaData.id == id) {
@@ -65,7 +72,13 @@ $(document).ready(function () {
         }
     }
 
-    //TODO: Make this work. Or is it even necessary?
+
+    function resetMarkerIcons() {
+        markers.forEach(function (marker) {
+            marker.setIcon('https://www.google.com/mapfiles/marker.png');
+        });
+    }
+
     function removeMarkersOutOfBounds() {
         for (var i = 0; i < markers.length; i++) {
             if(!map.getBounds().contains(markers[i].getPosition())){
@@ -81,16 +94,26 @@ $(document).ready(function () {
         var id = marker.metaData.id;
         console.log("Clicked "+id);
         drawPath(id);
-        videoMarker=new google.maps.Marker({
-            position: marker.getPosition(),
-            map: map
-        });
+        getVideoMarker(marker);
         makeOtherMarkersTransparent(marker);
         removeIntersectionRoutes();
         drawIntersectionRoutes(id);
-        playVideo(id);
+        showVideo(id);
     }
-
+    function getVideoMarker(marker){
+        if(videoMarker==undefined) {
+            var image = {
+                url: 'position.png',
+                size: new google.maps.Size(25, 25),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(12.5, 12.5),
+            };
+        videoMarker=new google.maps.Marker({
+            icon:image,
+            position: marker.getPosition(),
+            map: map
+        });} else videoMarker.setPosition(marker.getPosition());
+    }
     function makeOtherMarkersTransparent(marker){
         marker.setIcon('https://www.google.com/mapfiles/marker.png');
         for (var i = 0; i < markers.length; i++) {
@@ -153,32 +176,31 @@ $(document).ready(function () {
         videoMarker.setPosition(route.GetPointAtDistance(current*distance));
     }
 
-    function playVideo(id) {
+
+    function showVideo(id) {
         $(video).attr("src", getVideoUrl(id));
         $("#overlay").css("z-index", 2);
+
+        ctx.fillStyle = "red";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         $(video).on("play", function () {
             $(canvas).width($(video).width());
             $(canvas).height($(video).height());
 
-            ctx.fillStyle = "red";
-            setVideoProgressCallback();
+            onVideoProgress();
         });
         //video.play();
     }
 
-    function setVideoProgressCallback() {
-
-
+    function onVideoProgress() {
         if (video.paused || video.ended) {
             return;
         }
         updateVideoMarker();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillText(video.currentTime.toString(), 10, 10);
-
-        setTimeout(setVideoProgressCallback, 50);
-
+        setTimeout(onVideoProgress, 50);
     }
 
 
@@ -186,8 +208,20 @@ $(document).ready(function () {
         return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
     }
 
+    function stopVideo() {
+        video.pause();
+        $("#overlay").css("z-index", 0);
+    }
+
     function getURLforIntersections(id) {
         return url + "/intersections?videoID=" + id;
+    }
+
+    function onMapClicked() {
+        stopVideo();
+        removeIntersectionRoutes();
+        resetMarkerIcons();
+        removeRoute();
     }
 
 });
