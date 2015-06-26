@@ -7,6 +7,10 @@ $(document).ready(function () {
     var route;
     var markers = [];
 
+    var video = $("#video")[0];
+    var canvas = $("#canvas")[0];
+    var ctx = canvas.getContext("2d");
+
     function initialize() {
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
@@ -37,6 +41,7 @@ $(document).ready(function () {
                 marker.metaData = {id: this.id};
                 google.maps.event.addListener(marker, 'click', function () {
                     drawPath(marker.metaData.id);
+                    playVideo(marker.metaData.id);
                 });
                 markers.push(marker);
             });
@@ -76,6 +81,36 @@ $(document).ready(function () {
 
     function getURLforPath(id) {
         return url + "/videopath?videoID=" + id;
+    }
+
+    function playVideo(id) {
+        $(video).attr("src", getVideoUrl(id));
+        $("#overlay").css("z-index", 2);
+
+        $(video).on("play", function () {
+            $(canvas).width($(video).width());
+            $(canvas).height($(video).height());
+
+            ctx.fillStyle = "red";
+            setVideoProgressCallback();
+        });
+        //video.play();
+    }
+
+    function setVideoProgressCallback() {
+        if (video.paused || video.ended) {
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText(video.currentTime.toString(), 10, 10);
+
+        setTimeout(setVideoProgressCallback, 50);
+
+    }
+
+    function getVideoUrl(id) {
+        return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
     }
 
 
