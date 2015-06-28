@@ -39,7 +39,7 @@ $(document).ready(function () {
                 }
                 var myLatlng = new google.maps.LatLng(this.lat, this.lng);
                 var marker = new google.maps.Marker({
-                    icon:'https://www.google.com/mapfiles/marker_yellow.png',
+                    icon:'images/icon_video.png',
                     position: myLatlng,
                     map: map
                 });
@@ -68,7 +68,7 @@ $(document).ready(function () {
     function markIntersectionMarker(id) {
         for (var i = 0; i < markers.length; i++) {
             if (markers[i].metaData.id == id) {
-                markers[i].setIcon('https://www.google.com/mapfiles/marker_orange.png');
+                markers[i].setIcon('images/icon_intersection.png');
             }
         }
     }
@@ -76,7 +76,7 @@ $(document).ready(function () {
 
     function resetMarkerIcons() {
         markers.forEach(function (marker) {
-            marker.setIcon('https://www.google.com/mapfiles/marker.png');
+            marker.setIcon('images/icon_video.png');
         });
     }
 
@@ -116,10 +116,10 @@ $(document).ready(function () {
         });} else videoMarker.setPosition(marker.getPosition());
     }
     function makeOtherMarkersTransparent(marker){
-        marker.setIcon('https://www.google.com/mapfiles/marker.png');
+        marker.setIcon('images/icon_video.png');
         for (var i = 0; i < markers.length; i++) {
             if (markers[i]!=marker) {
-                markers[i].setIcon('https://www.google.com/mapfiles/marker_yellow.png');
+                markers[i].setIcon('images/icon_video_transparent.png');
             }
         }
     }
