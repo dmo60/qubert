@@ -12,6 +12,7 @@ var videoinfo = require('./videoinfo');
 var videometadata = require('./videometadata');
 var videopath = require('./videopath');
 var intersections = require('./intersections');
+var viewcones = require('./viewcones');
 
 /**
  *  Define the sample application.
@@ -115,6 +116,7 @@ var SampleApp = function() {
         self.routes['/videometadata'] = videometadata.handleVideoMetaDataRequest;
         self.routes['/videopath'] = videopath.RequestHandler;
         self.routes['/intersections'] = intersections.RequestHandler;
+        self.routes['/viewcones'] = viewcones.RequestHandler;
     };
 
 
