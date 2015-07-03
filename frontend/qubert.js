@@ -23,6 +23,7 @@ $(document).ready(function () {
         google.maps.event.addListener(map, "idle", requestVideos);
         google.maps.event.addListener(map, "click", onMapClicked);
         //requestVideos();
+        
     }
 
     google.maps.event.addDomListener(window, 'load', initialize);
@@ -161,6 +162,24 @@ $(document).ready(function () {
         });
     }
 
+    function drawViewCone(conePoints) {
+        var viewCone = new google.maps.Polygon({
+            paths: conePoints,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35
+        });
+
+        viewCone.setMap(map);
+
+
+
+
+    }
+
+
     function getURLfromBounds() {
         var bounds = map.getBounds();
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
@@ -169,6 +188,10 @@ $(document).ready(function () {
 
     function getURLforPath(id) {
         return url + "/videopath?videoID=" + id;
+    }
+
+    function getURLforViewCone(id) {
+        return url + "/viewcone?pointID=" + id;
     }
 
     function updateVideoMarker(){
