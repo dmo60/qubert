@@ -141,43 +141,64 @@ exports.initialize = function (cb) {
                             rows.forEach(function (r) {
                                 wayPoints.push([r.Plng, r.Plat, parseInt(r.TimeCode), r.ThetaX, r.ThetaY, r.ThetaZ, r.R, r.Alpha]);
                             });
-                            /*
-                             for(var i = 0; i<wayPoints.length;i++) {
 
-                             var current = wayPoints[i];
-                             var neighbourPoints = [];
-                             //previous point
-                             if(i>0)
-                             neighbourPoints.push(wayPoints[i-1]);
-                             //next point
-                             if(i<wayPoints.length-1)
-                             neighbourPoints.push(wayPoints[i+1]);
+                            var distances = [];
+                            var averageDistance = 0;
+                            for (var i = 0; i < wayPoints.length; i++) {
 
-                             var distance = 0;
-                             for (var j=0; j<neighbourPoints.length;j++) {
-                             var distanceVector = [Math.abs(current[0]-neighbourPoints[j][0]),Math.abs(current[1]-neighbourPoints[j][1])];
-                             distance += Math.sqrt(distanceVector[0]*distanceVector[0] + distanceVector[1]*distanceVector[1]);
-                             }
-                             distance/=neighbourPoints.length;
-                             //magic number 0.006
-                             if(distance>0.0006) {
-                             if(i<1) {
+                                var current = wayPoints[i];
+                                var neighbourPoints = [];
+                                //previous point
+                                if (i > 0)
+                                    neighbourPoints.push(wayPoints[i - 1]);
+                                //next point
+                                if (i < wayPoints.length - 1)
+                                    neighbourPoints.push(wayPoints[i + 1]);
 
-                             //first one
-                             current = neighbourPoints[0];
-                             //video.location = new geoJson.Point(current[1], current[0]);
-                             } else if (i<wayPoints.length-1) {
-                             //middle ones
-                             current[0] = (neighbourPoints[1][0] - neighbourPoints[0][0])/2.0 ;
-                             current[1] = (neighbourPoints[1][1] - neighbourPoints[0][1])/2.0 ;
 
-                             } else {
-                             current = neighbourPoints[0];
-                             }
-                             wayPoints[i]=current;
+                                var distancesCurrent = []
+                                for (var j = 0; j < neighbourPoints.length; j++) {
+                                    var distanceVector = [Math.abs(current[0] - neighbourPoints[j][0]), Math.abs(current[1] - neighbourPoints[j][1])];
+                                    distancesCurrent.push(Math.sqrt(distanceVector[0] * distanceVector[0] + distanceVector[1] * distanceVector[1]));
+                                }
+                                var distance = Math.min.apply(Math, distancesCurrent);
+                                distances.push(distance);
+                                averageDistance += distance;
+                                //magic number 0.006
+                            }
+                            averageDistance /= parseFloat(distances.length);
+                            if(averageDistance!=0) {
+                            for (var i = 0; i < wayPoints.length; i++) {
+                                var current = wayPoints[i];
+                                var neighbourPoints = [];
+                                //previous point
+                                if (i > 0)
+                                    neighbourPoints.push(wayPoints[i - 1]);
+                                //next point
+                                if (i < wayPoints.length - 1)
+                                    neighbourPoints.push(wayPoints[i + 1]);
 
-                             }
-                             } */
+
+                                if (distances[i] > averageDistance) {
+                                    if (i < 1) {
+
+                                        //first one
+                                        current = neighbourPoints[0];
+                                        //video.location = new geoJson.Point(current[1], current[0]);
+                                    } else if (i < wayPoints.length - 1) {
+                                        //middle ones
+                                        current[0] = (neighbourPoints[1][0] + neighbourPoints[0][0]) / 2.0;
+                                        current[1] = (neighbourPoints[1][1] + neighbourPoints[0][1]) / 2.0;
+                                        wayPoints[i] = current;
+
+                                    } else {
+                                        current = neighbourPoints[0];
+                                    }
+
+                                }
+
+                            } }
+
                             video.trajectory = new geoJson.LineString(wayPoints);
                             callback();
                         }

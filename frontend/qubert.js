@@ -109,9 +109,9 @@ $(document).ready(function () {
         drawPath(id);
         getVideoMarker(marker);
         makeOtherMarkersTransparent(marker);
-        //removeIntersectionRoutes();
-        //drawIntersectionRoutes(id);
-        drawCones(id);
+        removeIntersectionRoutes();
+        drawIntersectionRoutes(id);
+        //drawCones(id);
         showVideo(id);
     }
 
@@ -192,6 +192,7 @@ $(document).ready(function () {
             var routePoints = [];
             $.each(data, function () {
                 routePoints.push(new google.maps.LatLng(this.lat, this.lng));
+
             });
             if (route != undefined)
                 route.setMap(null);
@@ -220,11 +221,10 @@ $(document).ready(function () {
         var viewCone = new google.maps.Polygon({
             paths: conePoints,
             strokeColor: '#FF0000',
-            strokeOpacity: 0.8,
+            strokeOpacity: 0.2,
             strokeWeight: 2,
             fillColor: '#FF0000',
-            fillOpacity: 0.35
-        });
+            fillOpacity: 0.1       });
 
         viewCone.setMap(map);
     }
