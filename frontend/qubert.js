@@ -215,6 +215,7 @@ $(document).ready(function () {
     }
 
     function drawCones(id) {
+        clearCones();
         $.get(getURLforViewCone(id), function (data) {
             $.each(data, function () {
                 drawViewCone(this.cone.coordinates[0], "red");
