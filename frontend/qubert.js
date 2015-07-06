@@ -7,6 +7,7 @@ $(document).ready(function () {
     var route;
     var markers = [];
     var intersectionRoutes = [];
+    var cones = [];
     var videoMarker;
 
     var video = $("#video")[0];
@@ -111,7 +112,7 @@ $(document).ready(function () {
         makeOtherMarkersTransparent(marker);
         removeIntersectionRoutes();
         drawIntersectionRoutes(id);
-        //drawCones(id);
+        drawCones(id);
         showVideo(id);
     }
 
@@ -205,6 +206,7 @@ $(document).ready(function () {
     }
 
     function drawCones(id) {
+        removeCones();
         $.get(getURLforViewCone(id), function (data) {
             $.each(data, function () {
                 var conePoints = this.cone.coordinates[0];
@@ -216,6 +218,11 @@ $(document).ready(function () {
             })
         });
     }
+    function removeCones(){
+    for (var i = 0; i < cones.length; i++) {
+        cones[i].setMap(null);
+    }
+    cones=[];}
 
     function drawViewCone(conePoints) {
         var viewCone = new google.maps.Polygon({
@@ -227,6 +234,7 @@ $(document).ready(function () {
             fillOpacity: 0.1       });
 
         viewCone.setMap(map);
+        cones.push(viewCone);
     }
 
 
