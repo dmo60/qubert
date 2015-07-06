@@ -36,9 +36,11 @@ exports.RequestHandler = function (req, res) {
             res.send("Database error!");
         } else {
             var wayPoints = [];
-            result.trajectory.coordinates.forEach(function (pos) {
-                wayPoints.push({lng: pos[0], lat: pos[1]});
-            });
+            if (result != null) {
+                result.trajectory.coordinates.forEach(function (pos) {
+                    wayPoints.push({lng: pos[0], lat: pos[1]});
+                });
+            }
             res.json(wayPoints);
         }
     });

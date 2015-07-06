@@ -8,6 +8,8 @@ $(document).ready(function () {
     var markers = [];
     var intersectionRoutes = [];
     var videoMarker;
+    var viewIntersections;
+    var cones = [];
 
     var video = $("#video")[0];
     var canvas = $("#canvas")[0];
@@ -26,12 +28,11 @@ $(document).ready(function () {
         //requestVideos();
 
 
-
         for (var i = 0; i < 360; i += 20) {
 
             drawVideoBubble(i);
 
-        };
+        }
     }
 
 
@@ -112,11 +113,12 @@ $(document).ready(function () {
         removeIntersectionRoutes();
         drawIntersectionRoutes(id);
         //drawCones(id);
+        getViewIntersections(id);
         showVideo(id);
     }
 
     function getVideoMarker(marker) {
-        if (videoMarker == undefined) {
+        if (videoMarker == null) {
             var image = {
                 url: 'position.png',
                 size: new google.maps.Size(25, 25),
@@ -140,15 +142,23 @@ $(document).ready(function () {
         }
     }
 
-    function drawIntersectionRoutes(id) {
-        $.get(getURLforIntersections(id), function (data) {
-            console.log("Drawing " + data.length + "intersecting paths");
-            $.each(data, function () {
+    function drawIntersectionRoutes() {
+        if (viewIntersections == null) {
+            return;
+        }
+        var videoSet = new Set();
+        viewIntersections.forEach(function (current) {
+            current.intersections.forEach(function (intersect) {
+                videoSet.add(intersect.VideoId);
+            });
+        });
+
+        videoSet.forEach(function (videoId) {
+            $.get(getURLforPath(videoId), function (data) {
                 var routePoints = [];
-                var coordinates = this.trajectory.coordinates;
-                markIntersectionMarker(this.VideoId);
-                $.each(coordinates, function (index, coords) {
-                    routePoints.push(new google.maps.LatLng(coords[1], coords[0]));
+                markIntersectionMarker(videoId);
+                $.each(data, function (index, coords) {
+                    routePoints.push(new google.maps.LatLng(coords.lat, coords.lng));
                 });
                 var route = new google.maps.Polyline({
                     path: routePoints,
@@ -163,7 +173,7 @@ $(document).ready(function () {
 
     function radians(degrees) {
         return degrees * Math.PI / 180;
-    };
+    }
 
 
     function drawVideoBubble(alpha) {
@@ -207,26 +217,38 @@ $(document).ready(function () {
     function drawCones(id) {
         $.get(getURLforViewCone(id), function (data) {
             $.each(data, function () {
-                var conePoints = this.cone.coordinates[0];
-                var p1 = new google.maps.LatLng(conePoints[0][1], conePoints[0][0]);
-                var p2 = new google.maps.LatLng(conePoints[1][1], conePoints[1][0]);
-                var p3 = new google.maps.LatLng(conePoints[2][1], conePoints[2][0]);
-                var p4 = new google.maps.LatLng(conePoints[3][1], conePoints[3][0]);
-                drawViewCone([p1, p2, p3, p4]);
+                drawViewCone(this.cone.coordinates[0], "red");
             })
         });
     }
 
-    function drawViewCone(conePoints) {
+    function drawViewCone(polygon, color) {
+        if (typeof(color) === "undefined") color = "red";
+
+        var p1 = new google.maps.LatLng(polygon[0][1], polygon[0][0]);
+        var p2 = new google.maps.LatLng(polygon[1][1], polygon[1][0]);
+        var p3 = new google.maps.LatLng(polygon[2][1], polygon[2][0]);
+        var p4 = new google.maps.LatLng(polygon[3][1], polygon[3][0]);
+        var conePoints = [p1, p2, p3, p4];
+
         var viewCone = new google.maps.Polygon({
             paths: conePoints,
-            strokeColor: '#FF0000',
+            strokeColor: color,
             strokeOpacity: 0.2,
             strokeWeight: 2,
-            fillColor: '#FF0000',
-            fillOpacity: 0.1       });
+            fillColor: color,
+            fillOpacity: 0.1
+        });
 
         viewCone.setMap(map);
+        cones.push(viewCone);
+    }
+
+    function clearCones() {
+        cones.forEach(function (cone) {
+            cone.setMap(null);
+        });
+        cones = [];
     }
 
 
@@ -255,8 +277,8 @@ $(document).ready(function () {
         $(video).attr("src", getVideoUrl(id));
         $("#overlay").css("z-index", 2);
 
-        ctx.fillStyle = "red";
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //ctx.fillStyle = "red";
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         $(video).on("play", function () {
             $(canvas).width($(video).width());
@@ -271,10 +293,31 @@ $(document).ready(function () {
         if (video.paused || video.ended) {
             return;
         }
-        updateVideoMarker();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText(video.currentTime.toString(), 10, 10);
-        setTimeout(onVideoProgress, 50);
+        //updateVideoMarker();
+        drawIntersections(Math.round(video.currentTime));
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //ctx.fillText(video.currentTime.toString(), 10, 10);
+        setTimeout(onVideoProgress, 1000);
+    }
+
+    function drawIntersections(time) {
+        if (viewIntersections == undefined) {
+            return;
+        }
+        clearCones();
+        for (var i = 0; i < viewIntersections.length; i++) {
+            var current = viewIntersections[i];
+            if (current.time > time) {
+                break;
+            }
+            if (current.time == time) {
+                videoMarker.setPosition(new google.maps.LatLng(current.cone[0][1], current.cone[0][0]));
+                drawViewCone(current.cone, "red");
+                current.intersections.forEach(function (intersect) {
+                    drawViewCone(intersect.cone, "blue");
+                })
+            }
+        }
     }
 
 
@@ -283,6 +326,7 @@ $(document).ready(function () {
     }
 
     function stopVideo() {
+        viewIntersections = null;
         video.pause();
         $("#overlay").css("z-index", 0);
     }
@@ -291,11 +335,27 @@ $(document).ready(function () {
         return url + "/intersections?videoID=" + id;
     }
 
+    function removeVideoMarker() {
+        if (videoMarker != null) {
+            videoMarker.setMap(null);
+            videoMarker = null;
+        }
+    }
+
     function onMapClicked() {
         stopVideo();
         removeIntersectionRoutes();
         resetMarkerIcons();
         removeRoute();
+        removeVideoMarker();
+        clearCones();
+    }
+
+    function getViewIntersections(id) {
+        $.get(getURLforIntersections(id), function (data) {
+            viewIntersections = data;
+            drawIntersectionRoutes();
+        });
     }
 
 });
