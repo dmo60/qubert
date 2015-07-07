@@ -20,6 +20,44 @@ exports.RequestHandler = function (req, res) {
         },
 
         function (mongoDb, callback) {
+            startTimeLog("Get query video hull");
+            mongoDb.collection("videos")
+                .findOne({VideoId: queryVideoId}, function(err, video) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        stopTimeLog();
+                        callback(null, video.hull, mongoDb);
+                    }
+                });
+        },
+
+        function(queryHull, mongoDb, callback) {
+            startTimeLog("Find candidate videos");
+            mongoDb.collection("videos")
+                .find({
+                    VideoId: {$ne: queryVideoId},
+                    hull: {
+                        $geoIntersects: {
+                            $geometry: queryHull
+                        }
+                    }
+                })
+                .toArray(function(err, docs) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        var ids = [];
+                        docs.forEach(function(doc) {
+                            ids.push(doc.VideoId);
+                        });
+                        stopTimeLog();
+                        callback(null, ids, mongoDb);
+                    }
+                });
+        },
+
+        function (candidateVideos, mongoDb, callback) {
             startTimeLog("Get view cones for query video");
             mongoDb.collection("viewcones")
                 .find({VideoId: queryVideoId})
@@ -29,20 +67,19 @@ exports.RequestHandler = function (req, res) {
                         callback(err);
                     } else {
                         stopTimeLog();
-                        callback(null, docs, mongoDb);
+                        callback(null, candidateVideos, docs, mongoDb);
                     }
                 });
         },
 
-        function (queryCones, mongoDb, callback) {
+        function (candidateVideos, queryCones, mongoDb, callback) {
             startTimeLog("Find intersections for each view cone");
             var result = [];
             async.forEachOf(queryCones, function (cone, index, cb) {
                 // TODO: aggregate by videoId??
-                //startTimeLog("query");
                 mongoDb.collection("viewcones")
                     .find({
-                        VideoId: {$ne: queryVideoId},
+                        VideoId: {$in: candidateVideos},
                         cone: {
                             $geoIntersects: {
                                 //$geometry: cone.cone
@@ -89,7 +126,7 @@ exports.RequestHandler = function (req, res) {
         }
     ], function (err, intersections) {
         if (err) {
-            console.err("Error! " + err);
+            console.error("Error! " + err);
             res.send("Database error!");
         } else {
             //console.log("Number of intersections found: " + intersections.length);

@@ -2,7 +2,8 @@ var MongoClient = require("mongodb").MongoClient
     , mysql = require("mysql")
     , async = require("async")
     , config = require("./config")
-    , geoJson = require("./geoJson");
+    , geoJson = require("./geoJson")
+    , hull = require("hull.js");
 
 exports.initialize = function (cb) {
     console.log("Initializing mongo database...");
@@ -23,6 +24,9 @@ exports.initialize = function (cb) {
         },
         function (callback) {
             buildViewCones(callback);
+        },
+        function (callback) {
+            buildHulls(callback);
         },
         function (callback) {
             disconnect(callback);
@@ -168,37 +172,38 @@ exports.initialize = function (cb) {
                                 //magic number 0.006
                             }
                             averageDistance /= parseFloat(distances.length);
-                            if(averageDistance!=0) {
-                            for (var i = 0; i < wayPoints.length; i++) {
-                                var current = wayPoints[i];
-                                var neighbourPoints = [];
-                                //previous point
-                                if (i > 0)
-                                    neighbourPoints.push(wayPoints[i - 1]);
-                                //next point
-                                if (i < wayPoints.length - 1)
-                                    neighbourPoints.push(wayPoints[i + 1]);
+                            if (averageDistance != 0) {
+                                for (var i = 0; i < wayPoints.length; i++) {
+                                    var current = wayPoints[i];
+                                    var neighbourPoints = [];
+                                    //previous point
+                                    if (i > 0)
+                                        neighbourPoints.push(wayPoints[i - 1]);
+                                    //next point
+                                    if (i < wayPoints.length - 1)
+                                        neighbourPoints.push(wayPoints[i + 1]);
 
 
-                                if (distances[i] > averageDistance) {
-                                    if (i < 1) {
+                                    if (distances[i] > averageDistance) {
+                                        if (i < 1) {
 
-                                        //first one
-                                        current = neighbourPoints[0];
-                                        //video.location = new geoJson.Point(current[1], current[0]);
-                                    } else if (i < wayPoints.length - 1) {
-                                        //middle ones
-                                        current[0] = (neighbourPoints[1][0] + neighbourPoints[0][0]) / 2.0;
-                                        current[1] = (neighbourPoints[1][1] + neighbourPoints[0][1]) / 2.0;
-                                        wayPoints[i] = current;
+                                            //first one
+                                            current = neighbourPoints[0];
+                                            //video.location = new geoJson.Point(current[1], current[0]);
+                                        } else if (i < wayPoints.length - 1) {
+                                            //middle ones
+                                            current[0] = (neighbourPoints[1][0] + neighbourPoints[0][0]) / 2.0;
+                                            current[1] = (neighbourPoints[1][1] + neighbourPoints[0][1]) / 2.0;
+                                            wayPoints[i] = current;
 
-                                    } else {
-                                        current = neighbourPoints[0];
+                                        } else {
+                                            current = neighbourPoints[0];
+                                        }
+
                                     }
 
                                 }
-
-                            } }
+                            }
 
                             video.trajectory = new geoJson.LineString(wayPoints);
                             callback();
@@ -298,6 +303,53 @@ exports.initialize = function (cb) {
                 });
             }
 
+        ], function (err, result) {
+            cb(err);
+        })
+    }
+
+    function buildHulls(cb) {
+        async.waterfall([
+            function (callback) {
+                self.mongoDb.collection("videos").find({}, {VideoId: 1}).toArray(function (err, docs) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null, docs);
+                    }
+                });
+            },
+
+            function (videos, callback) {
+                console.log("Calculate hull for videos...");
+                async.forEach(videos, function (video, cb) {
+                    self.mongoDb.collection("viewcones")
+                        .find({VideoId: video.VideoId})
+                        .toArray(function (err, docs) {
+                            var points = [];
+                            docs.forEach(function (cone) {
+                                points = points.concat(cone.cone.coordinates[0]);
+                            });
+
+                            var hullPoints = hull(points);
+                            var hullPolygon = new geoJson.Polygon([hullPoints]);
+
+                            self.mongoDb.collection("videos").findOneAndUpdate(
+                                {VideoId: video.VideoId},
+                                {$set: {hull: hullPolygon}},
+                                function (err, r) {
+                                    cb(err);
+                                })
+                        })
+                }, callback)
+            },
+
+            function (callback) {
+                console.log("Creating geo index for hull polygons...");
+                self.mongoDb.collection("videos").createIndex({hull: "2dsphere"}, null, function (err, indexName) {
+                    callback(err);
+                });
+            }
         ], function (err, result) {
             cb(err);
         })
