@@ -8,34 +8,38 @@ exports.RequestHandler = function (req, res) {
 
     async.waterfall([
         function (callback) {
+            startTimeLog("Connect to MongoDB");
             MongoClient.connect(config.MongoUrl, function (err, db) {
                 if (err) {
                     callback(err);
                 } else {
+                    stopTimeLog();
                     callback(null, db);
                 }
             })
         },
 
         function (mongoDb, callback) {
-            // TODO: only one cone per timecode??
+            startTimeLog("Get view cones for query video");
             mongoDb.collection("viewcones")
                 .find({VideoId: queryVideoId})
-                .sort({TimeCode: 1})
+                .sort({FovNum: 1})
                 .toArray(function (err, docs) {
                     if (err) {
                         callback(err);
                     } else {
+                        stopTimeLog();
                         callback(null, docs, mongoDb);
                     }
                 });
         },
 
         function (queryCones, mongoDb, callback) {
-            var queryVideoStartTime = queryCones[0].TimeCode;
+            startTimeLog("Find intersections for each view cone");
             var result = [];
             async.forEachOf(queryCones, function (cone, index, cb) {
                 // TODO: aggregate by videoId??
+                //startTimeLog("query");
                 mongoDb.collection("viewcones")
                     .find({
                         VideoId: {$ne: queryVideoId},
@@ -65,10 +69,11 @@ exports.RequestHandler = function (req, res) {
                                 })
                             });
                             result[index] = {
-                                time: Math.round((cone.TimeCode - queryVideoStartTime) / 1000),
+                                time: cone.FovNum - 1,
                                 cone: cone.cone.coordinates[0],
                                 intersections: intersections
                             };
+                            //stopTimeLog();
                             cb(null)
                         }
                     });
@@ -76,6 +81,7 @@ exports.RequestHandler = function (req, res) {
                 if (err) {
                     callback(err);
                 } else {
+                    stopTimeLog();
                     mongoDb.close();
                     callback(null, result);
                 }
@@ -90,5 +96,20 @@ exports.RequestHandler = function (req, res) {
             res.json(intersections);
         }
     });
+
+
+    var startTime;
+    var currString;
+    function startTimeLog(string) {
+        currString = string;
+        startTime = Date.now();
+    }
+
+    function stopTimeLog() {
+        var time = Date.now() - startTime;
+        console.log(currString + " [" + time/1000 + "s]");
+        currString = null;
+        startTime = null;
+    }
 
 };

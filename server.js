@@ -8,8 +8,6 @@ var config = require('./config');
 
 var test = require('./test');
 var videos = require('./videos');
-var videoinfo = require('./videoinfo');
-var videometadata = require('./videometadata');
 var videopath = require('./videopath');
 var intersections = require('./intersections');
 var viewcones = require('./viewcones');
@@ -112,8 +110,6 @@ var SampleApp = function() {
 
         self.routes['/test'] = test.RequestHandler;
         self.routes['/videos'] = videos.RequestHandler;
-        self.routes['/videoinfo'] = videoinfo.handleVideoInfoRequest;
-        self.routes['/videometadata'] = videometadata.handleVideoMetaDataRequest;
         self.routes['/videopath'] = videopath.RequestHandler;
         self.routes['/intersections'] = intersections.RequestHandler;
         self.routes['/viewcones'] = viewcones.RequestHandler;
@@ -135,7 +131,7 @@ var SampleApp = function() {
         });
 
         self.app.use(function(req, res, next) {
-            console.log("Received request: " + req.url);
+            //console.log("Received request: " + req.url);
             next();
         });
 

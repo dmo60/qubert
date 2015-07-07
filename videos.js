@@ -46,7 +46,7 @@ exports.RequestHandler = function (req, res) {
             console.log('Error while performing Query:' + err);
             res.send('Database error');
         } else {
-            console.log("Number of videos found: " + result.length);
+            //console.log("Number of videos found: " + result.length);
             res.setHeader('Content-Type', 'application/json');
             res.json(result);
         }

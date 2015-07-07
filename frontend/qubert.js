@@ -267,19 +267,9 @@ $(document).ready(function () {
         return url + "/viewcones?videoID=" + id;
     }
 
-    function updateVideoMarker() {
-        var current = video.currentTime / video.duration;
-        var distance = route.Distance();
-        videoMarker.setPosition(route.GetPointAtDistance(current * distance));
-    }
-
-
     function showVideo(id) {
         $(video).attr("src", getVideoUrl(id));
         $("#overlay").css("z-index", 2);
-
-        //ctx.fillStyle = "red";
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         $(video).on("play", function () {
             $(canvas).width($(video).width());
@@ -287,17 +277,13 @@ $(document).ready(function () {
 
             onVideoProgress();
         });
-        //video.play();
     }
 
     function onVideoProgress() {
         if (video.paused || video.ended) {
             return;
         }
-        //updateVideoMarker();
         drawIntersections(Math.round(video.currentTime));
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //ctx.fillText(video.currentTime.toString(), 10, 10);
         setTimeout(onVideoProgress, 1000);
     }
 

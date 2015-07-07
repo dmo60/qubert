@@ -102,6 +102,7 @@ exports.initialize = function (cb) {
                 console.log("Getting list of videos from MediaQ server...");
                 // We only want to select videos that have at least two different positions,
                 // otherwise we cannot build a valid trajectory later.
+                // TODO: also allow points!
                 var sql =
                     "SELECT VideoId, Plat, Plng, Keywords FROM VIDEO_METADATA AS t1 " +
                     "WHERE FovNum=1 AND EXISTS (" +
@@ -128,9 +129,9 @@ exports.initialize = function (cb) {
                 console.log("Loading trajectories for videos...");
                 async.each(videos, function (video, callback) {
                     var sql =
-                        "SELECT Plat, Plng, TimeCode, ThetaX, ThetaY, ThetaZ, R, Alpha" +
+                        "SELECT FovNum, Plat, Plng, TimeCode, ThetaX, ThetaY, ThetaZ, R, Alpha" +
                         " FROM VIDEO_METADATA " +
-                        "WHERE VideoId=? ORDER BY TimeCode ASC";
+                        "WHERE VideoId=? ORDER BY FovNum ASC";
 
                     self.mySqlDb.query(sql, [video.VideoId], function (err, rows) {
                         if (err) {
@@ -139,7 +140,7 @@ exports.initialize = function (cb) {
                             var wayPoints = [];
 
                             rows.forEach(function (r) {
-                                wayPoints.push([r.Plng, r.Plat, parseInt(r.TimeCode), r.ThetaX, r.ThetaY, r.ThetaZ, r.R, r.Alpha]);
+                                wayPoints.push([r.Plng, r.Plat, r.FovNum, parseInt(r.TimeCode), r.ThetaX, r.ThetaY, r.ThetaZ, r.R, r.Alpha]);
                             });
 
                             var distances = [];
@@ -256,7 +257,7 @@ exports.initialize = function (cb) {
         async.waterfall([
             function (callback) {
                 console.log("Getting list of video points from MediaQ server...");
-                var sql = "SELECT VideoId, Plat, Plng, ThetaX, TimeCode FROM VIDEO_METADATA";
+                var sql = "SELECT VideoId, Plat, Plng, ThetaX, TimeCode, FovNum FROM VIDEO_METADATA";
                 self.mySqlDb.query(sql, function (err, rows) {
                     if (err) {
                         callback(err);
