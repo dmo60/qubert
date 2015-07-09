@@ -206,6 +206,8 @@ exports.initialize = function (cb) {
                             }
 
                             video.trajectory = new geoJson.LineString(wayPoints);
+
+
                             callback();
                         }
                     });
@@ -262,6 +264,29 @@ exports.initialize = function (cb) {
         async.waterfall([
             function (callback) {
                 console.log("Getting list of video points from MediaQ server...");
+                var cones = [];
+                self.mongoDb.collection("videos").find({}).toArray(function (err, docs) {
+                   if (err) {
+                       callback(err);
+                   } else {
+                       docs.forEach(function(video) {
+                           video.trajectory.coordinates.forEach(function(point) {
+                                cones.push({
+                                    VideoId: video.VideoId,
+                                    Plat: point[1],
+                                    Plng: point[0],
+                                    FocNum: point[2],
+                                    TimeCode: point[3],
+                                    ThetaX: point[4],
+                                    cone: getViewConePolygon(point[1], point[0], point[4])
+                                })
+                           });
+                       });
+                       callback(null, cones);
+                   }
+                });
+
+/*
                 var sql = "SELECT VideoId, Plat, Plng, ThetaX, TimeCode, FovNum FROM VIDEO_METADATA";
                 self.mySqlDb.query(sql, function (err, rows) {
                     if (err) {
@@ -272,7 +297,7 @@ exports.initialize = function (cb) {
                         });
                         callback(null, rows);
                     }
-                });
+                });*/
             },
 
             // Insert all points into mongo
@@ -331,7 +356,7 @@ exports.initialize = function (cb) {
                                 points = points.concat(cone.cone.coordinates[0]);
                             });
 
-                            var hullPoints = hull(points);
+                            var hullPoints = hull(points, 1);
                             var hullPolygon = new geoJson.Polygon([hullPoints]);
 
                             self.mongoDb.collection("videos").findOneAndUpdate(
