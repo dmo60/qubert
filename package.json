@@ -29,7 +29,8 @@
     "mysql": "~2.5.4",
     "mongodb": "~2.0",
     "async": "",
-    "hull.js": ""
+    "hull.js": "",
+    "geojson-utils":""
   },
   "devDependencies": {
     "mongo-express": "https://github.com/andzdroid/mongo-express"
