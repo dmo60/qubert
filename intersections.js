@@ -53,13 +53,11 @@ exports.RequestHandler = function (req, res) {
             res.send("Database error!");
         } else {
             console.log("Number of videos found: " + videos.length);
-            console.log("querytrajectory:",queryTrajectory);
             var gju = require('geojson-utils');
             var result={};
             result.videos=videos;
             result.points=[];
             videos.forEach(function (video) {
-                console.log("video:"+video[0]);
                 if(video.trajectory!=undefined)
                 result.points.push(gju.lineStringsIntersect(video.trajectory,
                     queryTrajectory));

@@ -290,15 +290,12 @@ $(document).ready(function () {
 
     function drawIntersectionRoutes(id) {
         $.get(getURLforIntersections(id), function (data) {
-            console.log("Drawing " + data.videos.length + "intersecting paths");
             for (var i = 0; i < data.videos.length; i++) {
                 var routePoints = [];
                 //var coordinates = this.trajectory.coordinates;
                 markIntersectionMarker(this.VideoId);
                 var isAfterIntersection = false;
-                console.log("Undefined*"+data.points[i][data.points[i].length-1]);
                 var intersectionPoint=data.points[i][data.points[i].length-1];
-                console.log("IntersectionPoint:",intersectionPoint);
                 var latlng = new google.maps.LatLng(intersectionPoint.coordinates[0], intersectionPoint.coordinates[1]);
                 for (var j = 0; j < data.videos[i].trajectory.coordinates.length;j++ ) {
 
@@ -320,34 +317,14 @@ $(document).ready(function () {
                             strokeWeight: 2,
                             map: null
                         });
-                        console.log(google.maps.geometry.poly.isLocationOnEdge(latlng, polyline));
-                        console.log(google.maps.geometry.poly.containsLocation(latlng, polyline));
                         if(!google.maps.geometry.poly.containsLocation(latlng, polyline))
                         continue;
-                        /*
-                        //http://stackoverflow.com/questions/328107/how-can-you-determine-a-point-is-between-two-other-points-on-a-line-segment Antwort 1
-                        var dotproduct = (intersectionPoint.coordinates[0] - a[0]) * (b[0] - a[0]) + (intersectionPoint.coordinates[1] - a[1])
-                            * (b[1] - a[1]);
-                        if (dotproduct < 0)
-                            continue;
 
-                        var squaredlengthba = (b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]);
-
-                        console.log(squaredlengthba);
-                        if (dotproduct > squaredlengthba)
-                            continue;
-                        */
-                        console.log("found!");
                         isAfterIntersection=true;
                     }
                     routePoints.push(new google.maps.LatLng(a[1],a[0]));
                 }
-                /*
-                $.each(coordinates, function (index, coords) {
 
-
-                    routePoints.push(new google.maps.LatLng(coords[1], coords[0]));
-                });*/
                 var route = new google.maps.Polyline({
                     path: routePoints,
                     strokeWeight: 1,
