@@ -129,7 +129,9 @@ $(document).ready(function () {
         updateCenter(marker.position);
 
         //drawCones(id);
+
         // getViewIntersections(id);
+
         showVideo(id);
     }
 
@@ -173,34 +175,35 @@ $(document).ready(function () {
         }
     }
 
-    function drawIntersectionRoutes() {
-        if (viewIntersections == null) {
-            return;
-        }
-        var videoSet = new Set();
-        viewIntersections.forEach(function (current) {
-            current.intersections.forEach(function (intersect) {
-                videoSet.add(intersect.VideoId);
-            });
-        });
+    /*
+     function drawIntersectionRoutes() {
+     if (viewIntersections == null) {
+     return;
+     }
+     var videoSet = new Set();
+     viewIntersections.forEach(function (current) {
+     current.intersections.forEach(function (intersect) {
+     videoSet.add(intersect.VideoId);
+     });
+     });
 
-        videoSet.forEach(function (videoId) {
-            $.get(getURLforPath(videoId), function (data) {
-                var routePoints = [];
-                markIntersectionMarker(videoId);
-                $.each(data, function (index, coords) {
-                    routePoints.push(new google.maps.LatLng(coords.lat, coords.lng));
-                });
-                var route = new google.maps.Polyline({
-                    path: routePoints,
-                    strokeWeight: 1,
-                    strokeOpacity: 0.2,
-                    map: map
-                });
-                intersectionRoutes.push(route);
-            });
-        });
-    }
+     videoSet.forEach(function (videoId) {
+     $.get(getURLforPath(videoId), function (data) {
+     var routePoints = [];
+     markIntersectionMarker(videoId);
+     $.each(data, function (index, coords) {
+     routePoints.push(new google.maps.LatLng(coords.lat, coords.lng));
+     });
+     var route = new google.maps.Polyline({
+     path: routePoints,
+     strokeWeight: 1,
+     strokeOpacity: 0.2,
+     map: map
+     });
+     intersectionRoutes.push(route);
+     });
+     });
+     }*/
 
     function radians(degrees) {
         return degrees * Math.PI / 180;
@@ -358,31 +361,94 @@ $(document).ready(function () {
         if (video.paused || video.ended) {
             return;
         }
+
         updateVideoMarker();
-        drawIntersections(Math.round(video.currentTime));
+        //drawIntersections(Math.round(video.currentTime));
+
         setTimeout(onVideoProgress, 1000);
     }
 
-    function drawIntersections(time) {
-        if (viewIntersections == undefined) {
-            return;
-        }
-        clearCones();
-        for (var i = 0; i < viewIntersections.length; i++) {
-            var current = viewIntersections[i];
-            if (current.time > time) {
-                break;
+    function drawIntersectionRoutes(id) {
+        $.get(getURLforIntersections(id), function (data) {
+            for (var i = 0; i < data.videos.length; i++) {
+                var routePoints = [];
+                //var coordinates = this.trajectory.coordinates;
+                markIntersectionMarker(this.VideoId);
+                var isAfterIntersection = false;
+                var intersectionPoint=data.points[i][data.points[i].length-1];
+                var latlng = new google.maps.LatLng(intersectionPoint.coordinates[0], intersectionPoint.coordinates[1]);
+                for (var j = 0; j < data.videos[i].trajectory.coordinates.length;j++ ) {
+
+                    var a = data.videos[i].trajectory.coordinates[j];
+                    if(!isAfterIntersection) {
+                        if(j== data.videos[i].trajectory.coordinates.length-1)
+                        continue;
+
+                        var b = data.videos[i].trajectory.coordinates[j+1];
+                        var latLng1 = new google.maps.LatLng(a[1], a[0]);
+                        var latLng2 = new google.maps.LatLng(b[1],b[0]);
+
+                        //var latlng = new google.maps.LatLng(intersectionPoint[0], intersectionPoint[1]);
+
+                        var polyline = new google.maps.Polyline({
+                            path: [latLng1, latLng2],
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.01,
+                            strokeWeight: 2,
+                            map: null
+                        });
+                        if(!google.maps.geometry.poly.containsLocation(latlng, polyline))
+                        continue;
+
+                        isAfterIntersection=true;
+                    }
+                    routePoints.push(new google.maps.LatLng(a[1],a[0]));
+                }
+
+                var route = new google.maps.Polyline({
+                    path: routePoints,
+                    strokeWeight: 1,
+                    strokeOpacity: 0.2,
+                    map: map
+                });
+                intersectionRoutes.push(route);
             }
-            if (current.time == time) {
-                videoMarker.setPosition(new google.maps.LatLng(current.cone[0][1], current.cone[0][0]));
-                drawViewCone(current.cone, "red");
-                current.intersections.forEach(function (intersect) {
-                    drawViewCone(intersect.cone, "blue");
-                })
-            }
-        }
+            /*
+            console.log(data.points.length);
+            $.each(data.points, function () {
+                $.each(this, function () {
+                    var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(this.coordinates[0], this.coordinates[1]),
+                        map: map
+                    });
+                });
+
+            })*/
+        });
     }
 
+    /*
+     //cones
+     function drawIntersections(time) {
+     if (viewIntersections == undefined) {
+     return;
+     }
+     clearCones();
+     for (var i = 0; i < viewIntersections.length; i++) {
+     var current = viewIntersections[i];
+     if (current.time > time) {
+     break;
+     }
+     if (current.time == time) {
+     videoMarker.setPosition(new google.maps.LatLng(current.cone[0][1], current.cone[0][0]));
+     drawViewCone(current.cone, "red");
+     current.intersections.forEach(function (intersect) {
+     drawViewCone(intersect.cone, "blue");
+     })
+     }
+     }
+     }
+     */
 
     function getVideoUrl(id) {
         return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
@@ -390,7 +456,7 @@ $(document).ready(function () {
 
     function stopVideo() {
         viewIntersections = null;
-        video.pause();
+
 
     }
 

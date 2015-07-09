@@ -1,3 +1,6 @@
+/**
+ * Created by Fabian on 12.06.2015.
+ */
 var MongoClient = require("mongodb").MongoClient;
 var async = require("async");
 var config = require("./config");
@@ -8,145 +11,59 @@ exports.RequestHandler = function (req, res) {
 
     async.waterfall([
         function (callback) {
-            startTimeLog("Connect to MongoDB");
             MongoClient.connect(config.MongoUrl, function (err, db) {
                 if (err) {
                     callback(err);
                 } else {
-                    stopTimeLog();
                     callback(null, db);
                 }
             })
         },
 
         function (mongoDb, callback) {
-            startTimeLog("Get query video hull");
-            mongoDb.collection("videos")
-                .findOne({VideoId: queryVideoId}, function(err, video) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        stopTimeLog();
-                        callback(null, video.hull, mongoDb);
-                    }
-                });
-        },
-
-        function(queryHull, mongoDb, callback) {
-            startTimeLog("Find candidate videos");
-            mongoDb.collection("videos")
-                .find({
-                    VideoId: {$ne: queryVideoId},
-                    hull: {
-                        $geoIntersects: {
-                            $geometry: queryHull
-                        }
-                    }
-                })
-                .toArray(function(err, docs) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        var ids = [];
-                        docs.forEach(function(doc) {
-                            ids.push(doc.VideoId);
-                        });
-                        stopTimeLog();
-                        callback(null, ids, mongoDb);
-                    }
-                });
-        },
-
-        function (candidateVideos, mongoDb, callback) {
-            startTimeLog("Get view cones for query video");
-            mongoDb.collection("viewcones")
-                .find({VideoId: queryVideoId})
-                .sort({FovNum: 1})
-                .toArray(function (err, docs) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        stopTimeLog();
-                        callback(null, candidateVideos, docs, mongoDb);
-                    }
-                });
-        },
-
-        function (candidateVideos, queryCones, mongoDb, callback) {
-            startTimeLog("Find intersections for each view cone");
-            var result = [];
-            async.forEachOf(queryCones, function (cone, index, cb) {
-                // TODO: aggregate by videoId??
-                mongoDb.collection("viewcones")
-                    .find({
-                        VideoId: {$in: candidateVideos},
-                        cone: {
-                            $geoIntersects: {
-                                //$geometry: cone.cone
-                                $geometry: {
-                                    type: "Point",
-                                    coordinates: [cone.Plng, cone.Plat]
-                                }
-                            }
-                        }
-                    })
-                    .sort({VideoId: 1})
-                    .toArray(function (err, docs) {
-                        if (err) {
-                            cb(err);
-                        } else {
-                            var intersections = [];
-                            docs.forEach(function(doc) {
-                                intersections.push({
-                                    VideoId: doc.VideoId,
-                                    TimeCode: doc.TimeCode,
-                                    cone: doc.cone.coordinates[0],
-                                    position: [doc.Plat, doc.Plng],
-                                    angle: doc.ThetaX - cone.ThetaX
-                                })
-                            });
-                            result[index] = {
-                                time: cone.FovNum - 1,
-                                cone: cone.cone.coordinates[0],
-                                intersections: intersections
-                            };
-                            //stopTimeLog();
-                            cb(null)
-                        }
-                    });
-            }, function(err) {
+            mongoDb.collection("videos").findOne({VideoId: queryVideoId}, {fields: {trajectory: 1}}, function (err, result) {
                 if (err) {
                     callback(err);
                 } else {
-                    stopTimeLog();
-                    mongoDb.close();
-                    callback(null, result);
+                    callback(null, result.trajectory, mongoDb);
+                }
+            });
+        },
+
+        function (queryTrajectory, mongoDb, callback) {
+            mongoDb.collection("videos").find({
+                VideoId: {$ne: queryVideoId},
+                trajectory: {
+                    $geoIntersects: {
+                        $geometry: queryTrajectory
+                    }
+                }
+            }).toArray(function (err, docs) {
+                mongoDb.close();
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, docs,queryTrajectory)
                 }
             });
         }
-    ], function (err, intersections) {
+    ], function (err, videos,queryTrajectory) {
         if (err) {
-            console.error("Error! " + err);
+            console.err("Error! " + err);
             res.send("Database error!");
         } else {
-            //console.log("Number of intersections found: " + intersections.length);
-            res.json(intersections);
+            console.log("Number of videos found: " + videos.length);
+            var gju = require('geojson-utils');
+            var result={};
+            result.videos=videos;
+            result.points=[];
+            videos.forEach(function (video) {
+                if(video.trajectory!=undefined)
+                result.points.push(gju.lineStringsIntersect(video.trajectory,
+                    queryTrajectory));
+            });
+            res.json(result);
         }
     });
-
-
-    var startTime;
-    var currString;
-    function startTimeLog(string) {
-        currString = string;
-        startTime = Date.now();
-    }
-
-    function stopTimeLog() {
-        var time = Date.now() - startTime;
-        console.log(currString + " [" + time/1000 + "s]");
-        currString = null;
-        startTime = null;
-    }
 
 };
