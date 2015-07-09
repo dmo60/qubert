@@ -275,7 +275,7 @@ exports.initialize = function (cb) {
                                     VideoId: video.VideoId,
                                     Plat: point[1],
                                     Plng: point[0],
-                                    FocNum: point[2],
+                                    FovNum: point[2],
                                     TimeCode: point[3],
                                     ThetaX: point[4],
                                     cone: getViewConePolygon(point[1], point[0], point[4])
@@ -286,18 +286,6 @@ exports.initialize = function (cb) {
                    }
                 });
 
-/*
-                var sql = "SELECT VideoId, Plat, Plng, ThetaX, TimeCode, FovNum FROM VIDEO_METADATA";
-                self.mySqlDb.query(sql, function (err, rows) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        rows.forEach(function (frame) {
-                            frame.cone = getViewConePolygon(frame.Plat, frame.Plng, frame.ThetaX);
-                        });
-                        callback(null, rows);
-                    }
-                });*/
             },
 
             // Insert all points into mongo
