@@ -15,11 +15,17 @@ $(document).ready(function () {
     var canvas = $("#canvas")[0];
     var ctx = canvas.getContext("2d");
 
+
+    var videoPlayer = 0;
+
     function initialize() {
 
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
-            zoom: 15
+            zoom: 19,
+            mapTypeId: google.maps.MapTypeId.SATELLITE,
+            heading:10,
+            tilt:45
         };
         map = new google.maps.Map(document.getElementById('map-canvas'),
             mapOptions);
@@ -28,15 +34,23 @@ $(document).ready(function () {
         //requestVideos();
 
 
-        for (var i = 0; i < 360; i += 20) {
 
-            drawVideoBubble(i);
 
-        }
+
     }
 
 
     google.maps.event.addDomListener(window, 'load', initialize);
+
+
+    function rotateHeading(deg){
+        //Only possible at enough Zoom and Tilt 45 and map.Satellite
+        var heading = map.getHeading();
+        console.log(heading);
+        map.setHeading(heading+deg);
+
+    }
+
 
     function requestVideos() {
         console.log("Bounds changed. Requesting: " + getURLfromBounds());
@@ -112,9 +126,17 @@ $(document).ready(function () {
         makeOtherMarkersTransparent(marker);
         removeIntersectionRoutes();
         drawIntersectionRoutes(id);
+        updateCenter(marker.position);
+
         //drawCones(id);
-        getViewIntersections(id);
+        // getViewIntersections(id);
         showVideo(id);
+    }
+
+    function updateCenter(pos){
+
+        map.panTo(pos);
+
     }
 
     function getVideoMarker(marker) {
@@ -131,6 +153,15 @@ $(document).ready(function () {
                 map: map
             });
         } else videoMarker.setPosition(marker.getPosition());
+    }
+
+    function updateVideoMarker(){
+        video = document.getElementById("video"+videoPlayer);
+        var current = video.currentTime/video.duration;
+        var distance = route.Distance();
+        var markerpoint = route.GetPointAtDistance(current*distance);
+        updateCenter(markerpoint);
+        videoMarker.setPosition(markerpoint);
     }
 
     function makeOtherMarkersTransparent(marker) {
@@ -206,10 +237,25 @@ $(document).ready(function () {
             });
             if (route != undefined)
                 route.setMap(null);
+
+            var lineSymbol = {
+                path: 'M -1,0 0,-2 1,0',
+                strokeOpacity: 1,
+                scale: 3
+            };
+
+
+
             route = new google.maps.Polyline({
                 path: routePoints,
-                strokeOpacity: 1.0,
+                strokeOpacity: 0.5,
+                icons: [{
+                    icon: lineSymbol,
+                    offset: '0',
+                    repeat: '10px'
+                }],
                 map: map
+
             });
         });
     }
@@ -267,22 +313,52 @@ $(document).ready(function () {
         return url + "/viewcones?videoID=" + id;
     }
 
+    //transtitions to new video
     function showVideo(id) {
-        $(video).attr("src", getVideoUrl(id));
-        $("#overlay").css("z-index", 2);
+        //$(video).removeAttribute("controls");
 
-        $(video).on("play", function () {
-            $(canvas).width($(video).width());
-            $(canvas).height($(video).height());
+        var oldvideoID = "#video"+videoPlayer;
+        var oldVideo = document.getElementById("video" + videoPlayer);
+        videoPlayer = (videoPlayer == 0)?1:0;
+        var newVideoID = "#video"+videoPlayer;
+        var newVideo = document.getElementById("video" + videoPlayer);
+        video = $(newVideoID).get();
 
-            onVideoProgress();
+        newVideo.src = getVideoUrl(id);
+        newVideo.addEventListener("loadeddata",function(){
+            $(oldvideoID).animate({
+                opacity: 0
+            }, 500,function(){
+                oldVideo.pause();
+            });
+            $(oldvideoID).off("play");
+
+
+            $(newVideoID).animate({
+                opacity: 1
+            }, 500);
+
+
+            $(newVideoID).on("play", function () {
+                $(canvas).width($(video).width());
+                $(canvas).height($(video).height());
+
+
+                onVideoProgress();
+            });
+
         });
+
+
+
+
     }
 
     function onVideoProgress() {
         if (video.paused || video.ended) {
             return;
         }
+        updateVideoMarker();
         drawIntersections(Math.round(video.currentTime));
         setTimeout(onVideoProgress, 1000);
     }
@@ -315,7 +391,7 @@ $(document).ready(function () {
     function stopVideo() {
         viewIntersections = null;
         video.pause();
-        $("#overlay").css("z-index", 0);
+
     }
 
     function getURLforIntersections(id) {
