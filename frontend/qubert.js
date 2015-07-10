@@ -1,271 +1,122 @@
-/**
- * Created by Alexander on 26.06.2015.
- */
+var url = "http://127.0.0.1:8080";
+
 $(document).ready(function () {
     var map;
-    var url = "http://127.0.0.1:8080";
-    var route;
-    var markers = [];
-    var intersectionRoutes = [];
-    var videoMarker;
-    var viewIntersections;
-    var cones = [];
-
     var video = $("#video")[0];
     var canvas = $("#canvas")[0];
-    var ctx = canvas.getContext("2d");
+
+    var videos = [];
+    var selectedVideo = null;
+    var intersectionVideos = [];
+
+    google.maps.event.addDomListener(window, 'load', initialize);
 
     function initialize() {
-
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
             zoom: 15
         };
-        map = new google.maps.Map(document.getElementById('map-canvas'),
-            mapOptions);
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
         google.maps.event.addListener(map, "click", onMapClicked);
-        //requestVideos();
-
-
-        for (var i = 0; i < 360; i += 20) {
-
-            drawVideoBubble(i);
-
-        }
     }
-
-
-    google.maps.event.addDomListener(window, 'load', initialize);
 
     function requestVideos() {
-        console.log("Bounds changed. Requesting: " + getURLfromBounds());
-        //removeMarkersOutOfBounds();
-        ($).get(getURLfromBounds(), function (data) {
+        $.get(getURLfromBounds(), function (data) {
             $.each(data, function () {
                 //TODO: delete markers out of bounds
-                for (var i = 0; i < markers.length; i++) {
-                    if (markers[i].metaData.id == this.id) {
-                        return true;
-                    }
+
+                if (getVideoForId(this.id)) {
+                    return true;
                 }
-                var myLatlng = new google.maps.LatLng(this.lat, this.lng);
-                var marker = new google.maps.Marker({
-                    icon: 'images/icon_video.png',
-                    position: myLatlng,
-                    map: map
-                });
-                marker.metaData = {id: this.id};
-                google.maps.event.addListener(marker, 'click', function () {
-                    markerClicked(marker);
-                });
-                markers.push(marker);
+
+                var video = new Video(this.id, this.lat, this.lng);
+                if (selectedVideo == null) {
+                    video.drawMarker(map);
+                }
+                video.onMarkerClick(videoMarkerClicked);
+                videos.push(video);
             });
-            console.log("Markers added." + markers.length);
         });
-
     }
 
-    function removeIntersectionRoutes() {
-        for (var i = 0; i < intersectionRoutes.length; i++) {
-            intersectionRoutes[i].setMap(null);
+    function videoMarkerClicked(video) {
+        selectedVideo = video;
+        video.drawPath(map);
+        video.drawPositionMarker(map);
+
+        getIntersectionVideos(selectedVideo.id);
+        hideUnselectedVideos();
+
+        showVideo(selectedVideo.id);
+    }
+
+    function onMapClicked() {
+        if (selectedVideo != null) {
+            selectedVideo.removePath();
+            selectedVideo.removePositionMarker();
+            stopVideo();
+
+            intersectionVideos.forEach(function (video) {
+                video.removeIntersectionRoute();
+            });
+
+            selectedVideo = null;
+            intersectionVideos = [];
+            showAllVideos();
         }
-        routes = [];
     }
 
-    function removeRoute() {
-        route.setMap(null);
-        route = null;
+    function hideUnselectedVideos() {
+        videos.forEach(function (video) {
+            if (video.id != selectedVideo.id) {
+                video.removeMarker();
+            }
+        })
     }
 
-    function markIntersectionMarker(id) {
-        for (var i = 0; i < markers.length; i++) {
-            if (markers[i].metaData.id == id) {
-                markers[i].setIcon('images/icon_intersection.png');
+    function showAllVideos() {
+        videos.forEach(function (video) {
+            video.drawMarker(map);
+        })
+    }
+
+    function getIntersectionVideos(id) {
+        $.get(getURLforIntersections(id), function (data) {
+            for (var i = 0; i < data.videos.length; i++) {
+
+                var curr = data.videos[i];
+
+                var video = getVideoForId(curr.VideoId);
+                if (!video) {
+                    video = new Video(curr.VideoId, curr.location.coordinates[1],
+                        curr.location.coordinates[0]);
+                    video.onMarkerClick(videoMarkerClicked);
+                    videos.push(video);
+                }
+
+                video.setTrajecotry(curr.trajectory.coordinates);
+
+                var intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
+                video.drawIntersectionRoute({lat: intersectionPoint[0], lng: intersectionPoint[1]}, map);
+                intersectionVideos.push(video);
+            }
+        });
+    }
+
+    function getVideoForId(id) {
+        for (var i = 0; i < videos.length; i++) {
+            if (videos[i].id == id) {
+                return videos[i];
             }
         }
+        return undefined;
     }
-
-
-    function resetMarkerIcons() {
-        markers.forEach(function (marker) {
-            marker.setIcon('images/icon_video.png');
-        });
-    }
-
-    function removeMarkersOutOfBounds() {
-        for (var i = 0; i < markers.length; i++) {
-            if (!map.getBounds().contains(markers[i].getPosition())) {
-                markers[i].setMap(null);
-                markers.splice(i, 1);
-                i--;
-            }
-        }
-        markers = [];
-    }
-
-    function markerClicked(marker) {
-        var id = marker.metaData.id;
-        console.log("Clicked " + id);
-        drawPath(id);
-        getVideoMarker(marker);
-        makeOtherMarkersTransparent(marker);
-        removeIntersectionRoutes();
-        drawIntersectionRoutes(id);
-        //drawCones(id);
-        //getViewIntersections(id);
-        showVideo(id);
-    }
-
-    function getVideoMarker(marker) {
-        if (videoMarker == null) {
-            var image = {
-                url: 'position.png',
-                size: new google.maps.Size(25, 25),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(12.5, 12.5),
-            };
-            videoMarker = new google.maps.Marker({
-                icon: image,
-                position: marker.getPosition(),
-                map: map
-            });
-        } else videoMarker.setPosition(marker.getPosition());
-    }
-
-    function makeOtherMarkersTransparent(marker) {
-        marker.setIcon('images/icon_video.png');
-        for (var i = 0; i < markers.length; i++) {
-            if (markers[i] != marker) {
-                markers[i].setIcon('images/icon_video_transparent.png');
-            }
-        }
-    }
-
-    /*
-     function drawIntersectionRoutes() {
-     if (viewIntersections == null) {
-     return;
-     }
-     var videoSet = new Set();
-     viewIntersections.forEach(function (current) {
-     current.intersections.forEach(function (intersect) {
-     videoSet.add(intersect.VideoId);
-     });
-     });
-
-     videoSet.forEach(function (videoId) {
-     $.get(getURLforPath(videoId), function (data) {
-     var routePoints = [];
-     markIntersectionMarker(videoId);
-     $.each(data, function (index, coords) {
-     routePoints.push(new google.maps.LatLng(coords.lat, coords.lng));
-     });
-     var route = new google.maps.Polyline({
-     path: routePoints,
-     strokeWeight: 1,
-     strokeOpacity: 0.2,
-     map: map
-     });
-     intersectionRoutes.push(route);
-     });
-     });
-     }*/
-
-    function radians(degrees) {
-        return degrees * Math.PI / 180;
-    }
-
-
-    function drawVideoBubble(alpha) {
-        //dependant on distance between location and location of the crossing videos point
-        console.log("run")
-        var canvas = $("#canvas");
-        var canvasPosition = canvas.offset();
-        var radius = 200;
-
-
-        var posX = canvasPosition.left + canvas.width() / 2 + radius * Math.cos(radians(alpha));
-        var posY = canvasPosition.top + canvas.height() / 2 + radius * Math.sin(radians(alpha));
-
-
-        var vB = $("<div>", {class: "videoBubble"});
-        vB.css("top", posY);
-        vB.css("left", posX);
-
-        var overlay = $("#overlay");
-        vB.appendTo(overlay);
-
-    }
-
-    function drawPath(id) {
-        $.get(getURLforPath(id), function (data) {
-            var routePoints = [];
-            $.each(data, function () {
-                routePoints.push(new google.maps.LatLng(this.lat, this.lng));
-
-            });
-            if (route != undefined)
-                route.setMap(null);
-            route = new google.maps.Polyline({
-                path: routePoints,
-                strokeOpacity: 1.0,
-                map: map
-            });
-        });
-    }
-
-    function drawCones(id) {
-        clearCones();
-        $.get(getURLforViewCone(id), function (data) {
-            $.each(data, function () {
-                drawViewCone(this.cone.coordinates[0], "red");
-            })
-        });
-    }
-
-    function drawViewCone(polygon, color) {
-        if (typeof(color) === "undefined") color = "red";
-
-        var p1 = new google.maps.LatLng(polygon[0][1], polygon[0][0]);
-        var p2 = new google.maps.LatLng(polygon[1][1], polygon[1][0]);
-        var p3 = new google.maps.LatLng(polygon[2][1], polygon[2][0]);
-        var p4 = new google.maps.LatLng(polygon[3][1], polygon[3][0]);
-        var conePoints = [p1, p2, p3, p4];
-
-        var viewCone = new google.maps.Polygon({
-            paths: conePoints,
-            strokeColor: color,
-            strokeOpacity: 0.2,
-            strokeWeight: 2,
-            fillColor: color,
-            fillOpacity: 0.1
-        });
-
-        viewCone.setMap(map);
-        cones.push(viewCone);
-    }
-
-    function clearCones() {
-        cones.forEach(function (cone) {
-            cone.setMap(null);
-        });
-        cones = [];
-    }
-
 
     function getURLfromBounds() {
         var bounds = map.getBounds();
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
             "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng();
-    }
-
-    function getURLforPath(id) {
-        return url + "/videopath?videoID=" + id;
-    }
-
-    function getURLforViewCone(id) {
-        return url + "/viewcones?videoID=" + id;
     }
 
     function showVideo(id) {
@@ -284,98 +135,15 @@ $(document).ready(function () {
         if (video.paused || video.ended) {
             return;
         }
-        //drawIntersections(Math.round(video.currentTime));
+        selectedVideo.updatePositionMarker(Math.round(video.currentTime));
         setTimeout(onVideoProgress, 1000);
     }
-
-    function drawIntersectionRoutes(id) {
-        $.get(getURLforIntersections(id), function (data) {
-            for (var i = 0; i < data.videos.length; i++) {
-                var routePoints = [];
-                //var coordinates = this.trajectory.coordinates;
-                markIntersectionMarker(this.VideoId);
-                var isAfterIntersection = false;
-                var intersectionPoint=data.points[i][data.points[i].length-1];
-                var latlng = new google.maps.LatLng(intersectionPoint.coordinates[0], intersectionPoint.coordinates[1]);
-                for (var j = 0; j < data.videos[i].trajectory.coordinates.length;j++ ) {
-
-                    var a = data.videos[i].trajectory.coordinates[j];
-                    if(!isAfterIntersection) {
-                        if(j== data.videos[i].trajectory.coordinates.length-1)
-                        continue;
-
-                        var b = data.videos[i].trajectory.coordinates[j+1];
-                        var latLng1 = new google.maps.LatLng(a[1], a[0]);
-                        var latLng2 = new google.maps.LatLng(b[1],b[0]);
-
-                        //var latlng = new google.maps.LatLng(intersectionPoint[0], intersectionPoint[1]);
-
-                        var polyline = new google.maps.Polyline({
-                            path: [latLng1, latLng2],
-                            strokeColor: "#FF0000",
-                            strokeOpacity: 0.01,
-                            strokeWeight: 2,
-                            map: null
-                        });
-                        if(!google.maps.geometry.poly.containsLocation(latlng, polyline))
-                        continue;
-
-                        isAfterIntersection=true;
-                    }
-                    routePoints.push(new google.maps.LatLng(a[1],a[0]));
-                }
-
-                var route = new google.maps.Polyline({
-                    path: routePoints,
-                    strokeWeight: 1,
-                    strokeOpacity: 0.2,
-                    map: map
-                });
-                intersectionRoutes.push(route);
-            }
-            /*
-            console.log(data.points.length);
-            $.each(data.points, function () {
-                $.each(this, function () {
-                    var marker = new google.maps.Marker({
-                        position: new google.maps.LatLng(this.coordinates[0], this.coordinates[1]),
-                        map: map
-                    });
-                });
-
-            })*/
-        });
-    }
-
-    /*
-     //cones
-     function drawIntersections(time) {
-     if (viewIntersections == undefined) {
-     return;
-     }
-     clearCones();
-     for (var i = 0; i < viewIntersections.length; i++) {
-     var current = viewIntersections[i];
-     if (current.time > time) {
-     break;
-     }
-     if (current.time == time) {
-     videoMarker.setPosition(new google.maps.LatLng(current.cone[0][1], current.cone[0][0]));
-     drawViewCone(current.cone, "red");
-     current.intersections.forEach(function (intersect) {
-     drawViewCone(intersect.cone, "blue");
-     })
-     }
-     }
-     }
-     */
 
     function getVideoUrl(id) {
         return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
     }
 
     function stopVideo() {
-        viewIntersections = null;
         video.pause();
         $("#overlay").css("z-index", 0);
     }
@@ -384,27 +152,184 @@ $(document).ready(function () {
         return url + "/intersections?videoID=" + id;
     }
 
-    function removeVideoMarker() {
-        if (videoMarker != null) {
-            videoMarker.setMap(null);
-            videoMarker = null;
+});
+
+
+var Video = function (id, lat, lng) {
+
+    var self = this;
+    this.id = id;
+    this.position = new google.maps.LatLng(lat, lng);
+    this.marker = null;
+    this.trajectory = null;
+    this.polyline = null;
+    this.positionMarker = null;
+    this.intersectionRoute = null;
+    this.intersectionMarker = null;
+
+    this.drawMarker = function (map) {
+        if (self.marker != null) {
+            self.marker.setMap(map);
+            return;
         }
-    }
 
-    function onMapClicked() {
-        stopVideo();
-        removeIntersectionRoutes();
-        resetMarkerIcons();
-        removeRoute();
-        removeVideoMarker();
-        clearCones();
-    }
+        self.marker = new google.maps.Marker({
+            icon: 'img/icon_video.png',
+            position: self.position,
+            map: map
+        });
+    };
 
-    function getViewIntersections(id) {
-        $.get(getURLforIntersections(id), function (data) {
-            viewIntersections = data;
-            drawIntersectionRoutes();
+    this.removeMarker = function () {
+        if (self.marker != null) {
+            self.marker.setMap(null);
+        }
+    };
+
+    this.onMarkerClick = function (callback) {
+        if (self.marker == null) {
+            self.drawMarker(null);
+        }
+        google.maps.event.addListener(self.marker, 'click', function () {
+            callback(self);
+        });
+    };
+
+    this.setTrajecotry = function (trajectory) {
+        self.trajectory = trajectory;
+    };
+
+    this.drawPath = function (map) {
+        if (self.trajectory == null) {
+            loadTrajectory(self.drawPath, map);
+            return;
+        }
+
+        var waypoints = [];
+        self.trajectory.forEach(function (p) {
+            waypoints.push(new google.maps.LatLng(p[1], p[0]))
+        });
+
+        self.polyline = new google.maps.Polyline({
+            path: waypoints,
+            strokeColor: "blue",
+            strokeOpacity: 1.0,
+            strokeWeight: 3,
+            map: map
+        });
+    };
+
+    this.removePath = function () {
+        if (self.polyline != null) {
+            self.polyline.setMap(null);
+            self.polyline = null;
+        }
+    };
+
+    function loadTrajectory(callback, args) {
+        var pathUrl = url + "/videopath?videoID=" + self.id;
+
+        $.get(pathUrl, function (data) {
+            self.trajectory = data;
+            if (callback != "undefined") {
+                callback(args);
+            }
         });
     }
 
-});
+    this.drawPositionMarker = function (map) {
+        var image = {
+            url: "img/position.png",
+            size: new google.maps.Size(25, 25),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(12.5, 12.5)
+        };
+
+        self.positionMarker = new google.maps.Marker({
+            icon: image,
+            position: self.position,
+            map: map
+        });
+    };
+
+    this.updatePositionMarker = function (seconds) {
+        if (self.positionMarker == null) {
+            console.error("Cannot update position marker: is null!");
+            return;
+        }
+        var point = getPointForSecond(seconds);
+        var newPosition = new google.maps.LatLng(point[1], point[0]);
+        self.positionMarker.setPosition(newPosition);
+    };
+
+    this.removePositionMarker = function () {
+        if (self.positionMarker != null) {
+            self.positionMarker.setMap(null);
+            self.positionMarker = null;
+        }
+    };
+
+    function getPointForSecond(second) {
+        for (var i = 0; i < self.trajectory.length; i++) {
+            var point = self.trajectory[i];
+            if (point[2] == second + 1) {
+                return point;
+            }
+        }
+
+        return self.trajectory[self.trajectory.length - 1];
+    }
+
+    this.drawIntersectionRoute = function(intersectionPoint, map) {
+        var routePoints = [];
+        var isAfterIntersection = false;
+        var latlng = new google.maps.LatLng(intersectionPoint.lat, intersectionPoint.lng);
+
+        for (var j = 0; j < self.trajectory.length; j++) {
+
+            var a = self.trajectory[j];
+            if (!isAfterIntersection) {
+                if (j == self.trajectory.length - 1)
+                    continue;
+
+                var b = self.trajectory[j + 1];
+                var latLng1 = new google.maps.LatLng(a[1], a[0]);
+                var latLng2 = new google.maps.LatLng(b[1], b[0]);
+
+                var polyline = new google.maps.Polyline({
+                    path: [latLng1, latLng2]
+                });
+                if (!google.maps.geometry.poly.containsLocation(latlng, polyline))
+                    continue;
+
+                isAfterIntersection = true;
+            }
+            routePoints.push(new google.maps.LatLng(a[1], a[0]));
+        }
+
+        routePoints[0] = latlng;
+
+        self.intersectionMarker = new google.maps.Marker({
+            icon: 'img/icon_intersection.png',
+            position: latlng,
+            map: map
+        });
+
+        self.intersectionRoute = new google.maps.Polyline({
+            path: routePoints,
+            strokeWeight: 3,
+            strokeColor: "gray",
+            map: map
+        });
+    };
+
+    this.removeIntersectionRoute = function() {
+        if (self.intersectionRoute != null) {
+            self.intersectionRoute.setMap(null);
+            self.intersectionRoute = null;
+            self.intersectionMarker.setMap(null);
+            self.intersectionMarker = null;
+        }
+    }
+
+};
