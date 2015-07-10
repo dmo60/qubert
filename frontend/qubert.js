@@ -7,7 +7,6 @@ $(document).ready(function () {
 
     var videos = [];
     var currentVideo = null;
-    var intersectionVideos = [];
 
     var nextVideo = null;
     var currentIndex = 0;
@@ -154,15 +153,16 @@ $(document).ready(function () {
 
     function videoMarkerClicked(video) {
 
+        currentVideo = video;
         videoPath = [];
         currentIndex = 0;
-        currentVideo = video;
-        videoPath.push(video);
+        videoPath.push(currentVideo);
         //video.drawPath(map);
-        video.drawPositionMarker(map);
+        currentVideo.drawPositionMarker(map);
+        currentVideo.videoPathDepth=0;
         drawVideoPath();
 
-        getIntersectionVideos(currentVideo.id);
+        getIntersectionVideos(currentVideo);
         hideUnselectedVideos();
 
         updateCenter(video.position);
@@ -176,19 +176,17 @@ $(document).ready(function () {
             vid.removePositionMarker();
             vid.removeSplitPoint();
             vid.removeIntersectionRoute();
+            vid.intersectionVideos.forEach(function (video) {
+                video.removeIntersectionRoute();
+                video.removePath();
+            });
+            vid.intersectionVideos=[];
         });
 
         if (currentVideo != null) {
 
             video.pause();
-
-
-            intersectionVideos.forEach(function (video) {
-                video.removeIntersectionRoute();
-            });
-
             currentVideo = null;
-            intersectionVideos = [];
             videoPath=[];
             showAllVideos();
 
@@ -214,8 +212,11 @@ $(document).ready(function () {
         })
     }
 
-    function getIntersectionVideos(id) {
+    function getIntersectionVideos(vid) {
+        var id = vid.id;
+        console.log("id:"+ id);
         $.get(getURLforIntersections(id), function (data) {
+            console.log("replies:"+data.videos.length);
             for (var i = 0; i < data.videos.length; i++) {
 
                 var curr = data.videos[i];
@@ -229,12 +230,10 @@ $(document).ready(function () {
                 }
 
                 video.setTrajecotry(curr.trajectory.coordinates);
-
-                var intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
-                video.drawIntersectionRoute({lat: intersectionPoint[0], lng: intersectionPoint[1]}, map);
-                video.onIntersectionClick(intersectionClicked);
-                intersectionVideos.push(video);
+                video.intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
+                vid.intersectionVideos.push(video);
             }
+            drawVideoPath();
         });
     }
 
@@ -252,6 +251,7 @@ $(document).ready(function () {
                 videoPath[i].removeSplitPoint();
                 videoPath[i].removePositionMarker();
                 videoPath[i].removePath();
+                vidoePath[i].removeIntersectionPolyline();
                 videoPath.splice(i,1);
             }
         }
@@ -273,6 +273,14 @@ $(document).ready(function () {
             var curr = videoPath[i];
 
             curr.drawPath(map);
+            if(curr.videoPathDepth==currentIndex) {
+                curr.intersectionVideos.forEach(function(video) {
+
+                    video.drawIntersectionRoute({lat: video.intersectionPoint[0], lng: video.intersectionPoint[1]}, map);
+                    video.onIntersectionClick(intersectionClicked);
+                });
+            }
+
         }
 
     }
@@ -407,10 +415,12 @@ var Video = function (id, lat, lng) {
     this.trajectory = null;
     this.polyline = null;
     this.positionMarker = null;
-    this.intersectionRoute = null;
+    this.intersectionPolyline = null;
     this.intersectionMarker = null;
     this.splitPoint = null;
     this.splitPolyline = null;
+
+    this.intersectionVideos = [];
 
     var videoPathDepth= null;
 
@@ -494,6 +504,7 @@ var Video = function (id, lat, lng) {
         }
 
         self.removePath();
+        self.removeIntersectionPolyline();
 
         var waypoints = [];
         var splitpoints = [];
@@ -659,6 +670,8 @@ var Video = function (id, lat, lng) {
     };
 
     this.drawIntersectionRoute = function (intersectionPoint, map) {
+        if(self.intersectionPolyline!=null)
+            return;
         var routePoints = [];
         var isAfterIntersection = false;
         var latlng = new google.maps.LatLng(intersectionPoint.lat, intersectionPoint.lng);
@@ -687,13 +700,18 @@ var Video = function (id, lat, lng) {
 
         routePoints[0] = latlng;
 
+        if(self.intersectionMarker!=null) {
+            self.intersectionMarker.setMap(null);
+            self.intersectionMarker=null;
+        }
+
         self.intersectionMarker = new google.maps.Marker({
             icon: 'img/icon_intersection.png',
             position: latlng,
             map: map
         });
 
-        self.intersectionRoute = new google.maps.Polyline({
+        self.intersectionPolyline = new google.maps.Polyline({
             path: routePoints,
             strokeWeight: 3,
             strokeColor: "gray",
@@ -704,15 +722,23 @@ var Video = function (id, lat, lng) {
         google.maps.event.addListener(self.intersectionMarker, "click", function () {
             callback(self);
         });
-        google.maps.event.addListener(self.intersectionRoute, "click", function () {
+        google.maps.event.addListener(self.intersectionPolyline, "click", function () {
             callback(self);
         });
     }
 
+    this.removeIntersectionPolyline=function() {
+        if(self.intersectionPolyline!=null) {
+            self.intersectionPolyline.setMap(null);
+            self.intersectionPolyline=null;
+        }
+
+    };
+
     this.removeIntersectionRoute = function () {
-        if (self.intersectionRoute != null) {
-            self.intersectionRoute.setMap(null);
-            self.intersectionRoute = null;
+        if (self.intersectionPolyline != null) {
+            self.intersectionPolyline.setMap(null);
+            self.intersectionPolyline = null;
             self.intersectionMarker.setMap(null);
             self.intersectionMarker = null;
         }
