@@ -6,8 +6,12 @@ $(document).ready(function () {
     var canvas = $("#canvas")[0];
 
     var videos = [];
-    var selectedVideo = null;
+    var currentVideo = null;
     var intersectionVideos = [];
+
+    var nextVideo = null;
+    var currentIndex = 0;
+    var videoPath = [];
 
     var videoPlayer = 0;
 
@@ -17,7 +21,7 @@ $(document).ready(function () {
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
             zoom: 19,
-            mapTypeId: google.maps.MapTypeId.SATELLITE,
+            //mapTypeId: google.maps.MapTypeId.SATELLITE,
             heading: 10,
             tilt: 45
         };
@@ -44,7 +48,7 @@ $(document).ready(function () {
                 }
 
                 var video = new Video(this.id, this.lat, this.lng);
-                if (selectedVideo == null) {
+                if (currentVideo == null) {
                     video.drawMarker(map);
                 }
                 video.onMarkerClick(videoMarkerClicked);
@@ -54,28 +58,32 @@ $(document).ready(function () {
     }
 
     function videoMarkerClicked(video) {
-        selectedVideo = video;
+
+        videoPath = [];
+        currentIndex = 0;
+        currentVideo = video;
+        videoPath.push(video);
         video.drawPath(map);
         video.drawPositionMarker(map);
 
-        getIntersectionVideos(selectedVideo.id);
+        getIntersectionVideos(currentVideo.id);
         hideUnselectedVideos();
 
         updateCenter(video.position);
-        showVideo(selectedVideo.id);
+        showVideo(currentVideo.id);
     }
 
     function onMapClicked() {
-        if (selectedVideo != null) {
+        if (currentVideo != null) {
             video.pause();
-            selectedVideo.removePath();
-            selectedVideo.removePositionMarker();
+            currentVideo.removePath();
+            currentVideo.removePositionMarker();
 
             intersectionVideos.forEach(function (video) {
                 video.removeIntersectionRoute();
             });
 
-            selectedVideo = null;
+            currentVideo = null;
             intersectionVideos = [];
             showAllVideos();
         }
@@ -83,14 +91,14 @@ $(document).ready(function () {
 
     function hideUnselectedVideos() {
         videos.forEach(function (video) {
-            if (video.id != selectedVideo.id) {
+            if (video.id != currentVideo.id) {
                 video.removeMarker();
             }
         });
     }
 
     function updateCenter(pos) {
-        map.panTo(pos);
+        // map.panTo(pos);
     }
 
     function showAllVideos() {
@@ -117,9 +125,37 @@ $(document).ready(function () {
 
                 var intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
                 video.drawIntersectionRoute({lat: intersectionPoint[0], lng: intersectionPoint[1]}, map);
+                video.onIntersectionClick(intersectionClicked);
                 intersectionVideos.push(video);
             }
         });
+    }
+
+    function intersectionClicked(video) {
+        console.log("clicked Intersection " + video.id);
+        currentVideo.splitPoint = video.intersectionMarker.getPosition();
+        videoPath.push(video);
+        drawVideoPath();
+    }
+
+    function drawVideoPath() {
+        for (var i = 0; i < videoPath.length; i++) {
+            var curr = videoPath[i];
+
+            //if path is not intersection but first
+            if (curr.intersectionRoute == null || curr.intersectionRoute == undefined) {
+                curr.removePath();
+                //if path doesn't has splitpoint
+                if (curr.splitPoint == null || curr.splitPoint == undefined) {
+                    curr.drawPath(map);
+                } else {
+                    //if path has been split
+                    curr.drawSplitPath(map);
+                }
+
+            }
+        }
+
     }
 
     function getVideoForId(id) {
@@ -135,6 +171,42 @@ $(document).ready(function () {
         var bounds = map.getBounds();
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
             "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng();
+    }
+
+
+    function showVideoAtTime(id, time) {
+        var oldvideoID = "#video" + videoPlayer;
+        var oldVideo = document.getElementById("video" + videoPlayer);
+        videoPlayer = (videoPlayer == 0) ? 1 : 0;
+        var newVideoID = "#video" + videoPlayer;
+        var newVideo = document.getElementById("video" + videoPlayer);
+        video = $(newVideoID)[0];
+
+        newVideo.src = getVideoUrl(id);
+        newVideo.addEventListener("loadeddata", function () {
+
+            $(newVideoID)[0].currentTime = time;
+            $(oldvideoID).animate({
+                opacity: 0
+            }, 500, function () {
+                oldVideo.pause();
+            });
+            $(oldvideoID).off("play");
+
+            $(newVideoID).animate({
+                opacity: 1
+            }, 500);
+
+
+            $(newVideoID).on("play", function () {
+                $(canvas).width($(video).width());
+                $(canvas).height($(video).height());
+
+
+                onVideoProgress();
+            });
+
+        });
     }
 
     function showVideo(id) {
@@ -177,8 +249,22 @@ $(document).ready(function () {
         if (video.paused || video.ended) {
             return;
         }
-        selectedVideo.updatePositionMarker(Math.round(video.currentTime));
+        if (currentVideo.isAtSplitPoint(Math.round(video.currentTime))) {
+            getNextVideo();
+        }
+        currentVideo.updatePositionMarker(Math.round(video.currentTime));
         setTimeout(onVideoProgress, 1000);
+    }
+
+    function getNextVideo() {
+        videoPath[currentIndex + 1].positionMarker = currentVideo.positionMarker;
+        //currentVideo.removePositionMarker();
+        currentVideo = videoPath[currentIndex + 1];
+        video.pause();
+        var time = currentVideo.getSecondsforPoint(currentVideo.intersectionMarker.position);
+        console.log("time is:" + time);
+        showVideoAtTime(currentVideo.id, time);
+        currentIndex++;
     }
 
     function getVideoUrl(id) {
@@ -203,6 +289,7 @@ var Video = function (id, lat, lng) {
     this.positionMarker = null;
     this.intersectionRoute = null;
     this.intersectionMarker = null;
+    this.splitPoint = null;
 
     this.drawMarker = function (map) {
         if (self.marker != null) {
@@ -246,7 +333,56 @@ var Video = function (id, lat, lng) {
         self.trajectory.forEach(function (p) {
             waypoints.push(new google.maps.LatLng(p[1], p[0]))
         });
+        console.log("waypoints" + waypoints.length);
+        var lineSymbol = {
+            path: 'M -1,0 0,-2 1,0',
+            strokeOpacity: 1,
+            scale: 3
+        };
 
+        self.polyline = new google.maps.Polyline({
+            path: waypoints,
+            strokeColor: "blue",
+            strokeOpacity: 1.0,
+            strokeWeight: 3,
+            icons: [{
+                icon: lineSymbol,
+                offset: '0',
+                repeat: '10px'
+            }],
+            map: map
+        });
+    };
+
+    this.drawSplitPath = function (map) {
+        if (self.trajectory == null) {
+            loadTrajectory(self.drawSplitPath, map);
+            return;
+        }
+
+        var waypoints = [];
+        var isbeforeSplit = true;
+        for (var i = 0; isbeforeSplit && i < self.trajectory.length; i++) {
+            var a = self.trajectory[i];
+
+            if (i < self.trajectory.length - 1) {
+
+                var b = self.trajectory[i + 1];
+                var latLng1 = new google.maps.LatLng(a[1], a[0]);
+                var latLng2 = new google.maps.LatLng(b[1], b[0]);
+
+                var polyline = new google.maps.Polyline({
+                    path: [latLng1, latLng2]
+                });
+                if (google.maps.geometry.poly.containsLocation(self.splitPoint, polyline)) {
+                    console.log("out at " + i);
+                    isbeforeSplit = false;
+                }
+            }
+            waypoints.push(new google.maps.LatLng(a[1], a[0]));
+
+        }
+        console.log("waypoints i this long:" + waypoints.length);
         var lineSymbol = {
             path: 'M -1,0 0,-2 1,0',
             strokeOpacity: 1,
@@ -300,11 +436,26 @@ var Video = function (id, lat, lng) {
         });
     };
 
+    this.isAtSplitPoint = function (seconds) {
+        if (self.splitPoint == null || self.splitPoint == undefined)
+            return false;
+        console.log("checking");
+        var point = getPointForSecond(seconds);
+        var nextpoint = getPointForSecond((seconds + 1));
+        var latLng1 = new google.maps.LatLng(point[1], point[0]);
+        var latLng2 = new google.maps.LatLng(nextpoint[1], nextpoint[0]);
+        var polyline = new google.maps.Polyline({
+            path: [latLng1, latLng2]
+        });
+        return google.maps.geometry.poly.containsLocation(self.splitPoint, polyline);
+    };
+
     this.updatePositionMarker = function (seconds) {
         if (self.positionMarker == null) {
             console.error("Cannot update position marker: is null!");
             return;
         }
+
         var point = getPointForSecond(seconds);
         var newPosition = new google.maps.LatLng(point[1], point[0]);
         self.positionMarker.setPosition(newPosition);
@@ -327,6 +478,24 @@ var Video = function (id, lat, lng) {
 
         return self.trajectory[self.trajectory.length - 1];
     }
+
+    this.getSecondsforPoint = function (latLng) {
+
+        var i = 0;
+        var found = false;
+        for (; !found && i < self.trajectory.length; i++) {
+            var point = self.trajectory[i];
+            var nextpoint = self.trajectory[i + 1];
+            var latLng1 = new google.maps.LatLng(point[1], point[0]);
+            var latLng2 = new google.maps.LatLng(nextpoint[1], nextpoint[0]);
+            var polyline = new google.maps.Polyline({
+                path: [latLng1, latLng2]
+            });
+            if (google.maps.geometry.poly.containsLocation(latLng, polyline))
+                found = true;
+        }
+        return i;
+    };
 
     this.drawIntersectionRoute = function (intersectionPoint, map) {
         var routePoints = [];
@@ -370,6 +539,14 @@ var Video = function (id, lat, lng) {
             map: map
         });
     };
+    this.onIntersectionClick = function (callback) {
+        google.maps.event.addListener(self.intersectionMarker, "click", function () {
+            callback(self);
+        });
+        google.maps.event.addListener(self.intersectionRoute, "click", function () {
+            callback(self);
+        });
+    }
 
     this.removeIntersectionRoute = function () {
         if (self.intersectionRoute != null) {
