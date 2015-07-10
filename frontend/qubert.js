@@ -9,16 +9,29 @@ $(document).ready(function () {
     var selectedVideo = null;
     var intersectionVideos = [];
 
+    var videoPlayer = 0;
+
     google.maps.event.addDomListener(window, 'load', initialize);
 
     function initialize() {
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
-            zoom: 15
+            zoom: 19,
+            mapTypeId: google.maps.MapTypeId.SATELLITE,
+            heading: 10,
+            tilt: 45
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
         google.maps.event.addListener(map, "click", onMapClicked);
+    }
+
+    function rotateHeading(deg) {
+        //Only possible at enough Zoom and Tilt 45 and map.Satellite
+        var heading = map.getHeading();
+        console.log(heading);
+        map.setHeading(heading + deg);
+
     }
 
     function requestVideos() {
@@ -48,14 +61,15 @@ $(document).ready(function () {
         getIntersectionVideos(selectedVideo.id);
         hideUnselectedVideos();
 
+        updateCenter(video.position);
         showVideo(selectedVideo.id);
     }
 
     function onMapClicked() {
         if (selectedVideo != null) {
+            video.pause();
             selectedVideo.removePath();
             selectedVideo.removePositionMarker();
-            stopVideo();
 
             intersectionVideos.forEach(function (video) {
                 video.removeIntersectionRoute();
@@ -72,7 +86,11 @@ $(document).ready(function () {
             if (video.id != selectedVideo.id) {
                 video.removeMarker();
             }
-        })
+        });
+    }
+
+    function updateCenter(pos) {
+        map.panTo(pos);
     }
 
     function showAllVideos() {
@@ -120,14 +138,38 @@ $(document).ready(function () {
     }
 
     function showVideo(id) {
-        $(video).attr("src", getVideoUrl(id));
-        $("#overlay").css("z-index", 2);
+        //$(video).removeAttribute("controls");
 
-        $(video).on("play", function () {
-            $(canvas).width($(video).width());
-            $(canvas).height($(video).height());
+        var oldvideoID = "#video" + videoPlayer;
+        var oldVideo = document.getElementById("video" + videoPlayer);
+        videoPlayer = (videoPlayer == 0) ? 1 : 0;
+        var newVideoID = "#video" + videoPlayer;
+        var newVideo = document.getElementById("video" + videoPlayer);
+        video = $(newVideoID)[0];
 
-            onVideoProgress();
+        newVideo.src = getVideoUrl(id);
+        newVideo.addEventListener("loadeddata", function () {
+            $(oldvideoID).animate({
+                opacity: 0
+            }, 500, function () {
+                oldVideo.pause();
+            });
+            $(oldvideoID).off("play");
+
+
+            $(newVideoID).animate({
+                opacity: 1
+            }, 500);
+
+
+            $(newVideoID).on("play", function () {
+                $(canvas).width($(video).width());
+                $(canvas).height($(video).height());
+
+
+                onVideoProgress();
+            });
+
         });
     }
 
@@ -141,11 +183,6 @@ $(document).ready(function () {
 
     function getVideoUrl(id) {
         return "http://mediaq.dbs.ifi.lmu.de/MediaQ_MVC_V2/video_content/" + id;
-    }
-
-    function stopVideo() {
-        video.pause();
-        $("#overlay").css("z-index", 0);
     }
 
     function getURLforIntersections(id) {
@@ -210,11 +247,22 @@ var Video = function (id, lat, lng) {
             waypoints.push(new google.maps.LatLng(p[1], p[0]))
         });
 
+        var lineSymbol = {
+            path: 'M -1,0 0,-2 1,0',
+            strokeOpacity: 1,
+            scale: 3
+        };
+
         self.polyline = new google.maps.Polyline({
             path: waypoints,
             strokeColor: "blue",
             strokeOpacity: 1.0,
             strokeWeight: 3,
+            icons: [{
+                icon: lineSymbol,
+                offset: '0',
+                repeat: '10px'
+            }],
             map: map
         });
     };
@@ -280,7 +328,7 @@ var Video = function (id, lat, lng) {
         return self.trajectory[self.trajectory.length - 1];
     }
 
-    this.drawIntersectionRoute = function(intersectionPoint, map) {
+    this.drawIntersectionRoute = function (intersectionPoint, map) {
         var routePoints = [];
         var isAfterIntersection = false;
         var latlng = new google.maps.LatLng(intersectionPoint.lat, intersectionPoint.lng);
@@ -323,7 +371,7 @@ var Video = function (id, lat, lng) {
         });
     };
 
-    this.removeIntersectionRoute = function() {
+    this.removeIntersectionRoute = function () {
         if (self.intersectionRoute != null) {
             self.intersectionRoute.setMap(null);
             self.intersectionRoute = null;
