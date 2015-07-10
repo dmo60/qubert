@@ -158,8 +158,9 @@ $(document).ready(function () {
         currentIndex = 0;
         currentVideo = video;
         videoPath.push(video);
-        video.drawPath(map);
+        //video.drawPath(map);
         video.drawPositionMarker(map);
+        drawVideoPath();
 
         getIntersectionVideos(currentVideo.id);
         hideUnselectedVideos();
@@ -169,10 +170,18 @@ $(document).ready(function () {
     }
 
     function onMapClicked() {
+
+        videoPath.forEach(function(vid){
+            vid.removePath();
+            vid.removePositionMarker();
+            vid.removeSplitPoint();
+            vid.removeIntersectionRoute();
+        });
+
         if (currentVideo != null) {
+
             video.pause();
-            currentVideo.removePath();
-            currentVideo.removePositionMarker();
+
 
             intersectionVideos.forEach(function (video) {
                 video.removeIntersectionRoute();
@@ -180,8 +189,11 @@ $(document).ready(function () {
 
             currentVideo = null;
             intersectionVideos = [];
+            videoPath=[];
             showAllVideos();
+
         }
+
     }
 
     function hideUnselectedVideos() {
@@ -237,18 +249,7 @@ $(document).ready(function () {
         for (var i = 0; i < videoPath.length; i++) {
             var curr = videoPath[i];
 
-            //if path is not intersection but first
-            if (curr.intersectionRoute == null || curr.intersectionRoute == undefined) {
-                curr.removePath();
-                //if path doesn't has splitpoint
-                if (curr.splitPoint == null || curr.splitPoint == undefined) {
-                    curr.drawPath(map);
-                } else {
-                    //if path has been split
-                    curr.drawSplitPath(map);
-                }
-
-            }
+            curr.drawPath(map);
         }
 
     }
@@ -385,6 +386,7 @@ var Video = function (id, lat, lng) {
     this.intersectionRoute = null;
     this.intersectionMarker = null;
     this.splitPoint = null;
+    this.splitPolyline = null;
 
     this.drawMarker = function (map) {
         if (self.marker != null) {
@@ -405,6 +407,16 @@ var Video = function (id, lat, lng) {
         }
     };
 
+    this.removeSplitPoint=function(){
+        self.splitPoint=null;
+        if(this.splitPolyline!=null) {
+            this.splitPolyline.setMap(null);
+            this.splitPolyline=null;
+        }
+    };
+
+
+
     this.onMarkerClick = function (callback) {
         if (self.marker == null) {
             self.drawMarker(null);
@@ -417,7 +429,7 @@ var Video = function (id, lat, lng) {
     this.setTrajecotry = function (trajectory) {
         self.trajectory = trajectory;
     };
-
+/*
     this.drawPath = function (map) {
         if (self.trajectory == null) {
             loadTrajectory(self.drawPath, map);
@@ -447,17 +459,25 @@ var Video = function (id, lat, lng) {
             }],
             map: map
         });
-    };
+    }; */
 
-    this.drawSplitPath = function (map) {
+    this.drawPath = function (map) {
         if (self.trajectory == null) {
-            loadTrajectory(self.drawSplitPath, map);
+            loadTrajectory(self.drawPath, map);
             return;
         }
 
+        self.removePath();
+
         var waypoints = [];
+        var splitpoints = [];
         var isbeforeSplit = true;
-        for (var i = 0; isbeforeSplit && i < self.trajectory.length; i++) {
+
+        var afterIntersection=true
+        if(self.intersectionMarker!=null)
+            afterIntersection=false;
+
+        for (var i = 0;  i < self.trajectory.length; i++) {
             var a = self.trajectory[i];
 
             if (i < self.trajectory.length - 1) {
@@ -469,15 +489,22 @@ var Video = function (id, lat, lng) {
                 var polyline = new google.maps.Polyline({
                     path: [latLng1, latLng2]
                 });
-                if (google.maps.geometry.poly.containsLocation(self.splitPoint, polyline)) {
-                    console.log("out at " + i);
+
+                if (!afterIntersection&&!google.maps.geometry.poly.containsLocation(self.intersectionMarker.position, polyline))
+                    continue;
+
+                afterIntersection=true;
+
+                if (self.splitPoint!=null&&google.maps.geometry.poly.containsLocation(self.splitPoint, polyline)) {
                     isbeforeSplit = false;
                 }
             }
+            if(isbeforeSplit)
             waypoints.push(new google.maps.LatLng(a[1], a[0]));
+            else
+            splitpoints.push(new google.maps.LatLng(a[1], a[0]));
 
         }
-        console.log("waypoints i this long:" + waypoints.length);
         var lineSymbol = {
             path: 'M -1,0 0,-2 1,0',
             strokeOpacity: 1,
@@ -496,12 +523,25 @@ var Video = function (id, lat, lng) {
             }],
             map: map
         });
+        if(self.splitPoint!=null) {
+            self.splitPolyline = new google.maps.Polyline({
+                path: splitpoints,
+                strokeColor: "gray",
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: map
+            });
+        }
     };
 
     this.removePath = function () {
         if (self.polyline != null) {
             self.polyline.setMap(null);
             self.polyline = null;
+        }
+        if(self.splitPolyline!=null) {
+            self.splitPolyline.setMap(null);
+            self.splitPolyline = null;
         }
     };
 
