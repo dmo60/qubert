@@ -241,8 +241,31 @@ $(document).ready(function () {
     function intersectionClicked(video) {
         console.log("clicked Intersection " + video.id);
         currentVideo.splitPoint = video.intersectionMarker.getPosition();
-        videoPath.push(video);
+        removeOtherSelectionFromPath();
+        addToVideoPath(video);
         drawVideoPath();
+    }
+
+    function removeOtherSelectionFromPath(){
+        for (var i = 0; i < videoPath.length; i++) {
+            if (videoPath[i].videoPathDepth>currentIndex) {
+                videoPath[i].removeSplitPoint();
+                videoPath[i].removePositionMarker();
+                videoPath[i].removePath();
+                videoPath.splice(i,1);
+            }
+        }
+    }
+
+    function addToVideoPath(video) {
+        for (var i = 0; i < videoPath.length; i++) {
+            if (videoPath[i].id == video.id) {
+                return;
+            }
+        }
+
+        videoPath.push(video);
+        video.videoPathDepth=currentIndex+1;
     }
 
     function drawVideoPath() {
@@ -253,6 +276,7 @@ $(document).ready(function () {
         }
 
     }
+
 
     function getVideoForId(id) {
         for (var i = 0; i < videos.length; i++) {
@@ -387,6 +411,8 @@ var Video = function (id, lat, lng) {
     this.intersectionMarker = null;
     this.splitPoint = null;
     this.splitPolyline = null;
+
+    var videoPathDepth= null;
 
     this.drawMarker = function (map) {
         if (self.marker != null) {
