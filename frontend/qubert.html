@@ -5,12 +5,15 @@
         #overlay {
             position: absolute;
             left: 0;
-            top: 0;
+            top: 70%;
             width: 100%;
-            height: 100%;
-            z-index: 0;
+            height: 30%;
+            z-index: 2;
             pointer-events: none;
+            background-color: rgba(225, 255, 255, .3);
+
         }
+
         #map-canvas {
             position: absolute;
             left: 0;
@@ -19,40 +22,65 @@
             width: 100%;
             z-index: 1;
         }
-        #video, #canvas {
+
+        video, #canvas {
+            opacity: 1;
+            z-index: 3;
+            height: 100%;
+        }
+
+        #container {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 400px;
+            height: 100%;
+            position: relative;
+
+        }
+
+        #video0 {
             position: absolute;
-            left: 100px;
-            top: 50px;
-            width: 500px;
-            height: auto;
-        }
-
-        #video {
+            top: 0;
+            left: 0;
             pointer-events: auto;
+
         }
 
-        .videoBubble{
-            width:20px;
+        #video1 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: auto;
+
+        }
+
+        .videoBubble {
+            width: 20px;
             height: 20px;
             background-color: red;
             position: absolute;
             border-radius: 50%;
-
 
         }
     </style>
     <script type="text/javascript"
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkjmSvcMqjjrt-eV0pSaIeLhIKjBJgx4">
     </script>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&v=3&libraries=geometry"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="http://www.geocodezip.com/scripts/v3_epoly.js"></script>
     <script type="text/javascript" src="qubert.js"></script>
 </head>
 <body>
-    <div id="map-canvas"></div>
-    <div id="overlay">
-        <video id="video" controls></video>
+<div id="map-canvas"></div>
+<div id="overlay">
+    <div id="container">
+        <video id="video0" controls autoplay ></video>
+        <video id="video1" controls autoplay></video>
         <canvas id="canvas"></canvas>
     </div>
+
+</div>
 </body>
 </html>

@@ -1,6 +1,3 @@
-/**
- * Created by Fabian on 12.06.2015.
- */
 var MongoClient = require("mongodb").MongoClient;
 var async = require("async");
 var config = require("./config");
@@ -35,13 +32,7 @@ exports.RequestHandler = function (req, res) {
             console.error("Error! " + err);
             res.send("Database error!");
         } else {
-            var wayPoints = [];
-            if (result != null) {
-                result.trajectory.coordinates.forEach(function (pos) {
-                    wayPoints.push({lng: pos[0], lat: pos[1]});
-                });
-            }
-            res.json(wayPoints);
+            res.json(result.trajectory.coordinates);
         }
     });
 };

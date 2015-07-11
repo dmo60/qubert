@@ -30,6 +30,7 @@
     "mongodb": "~2.0",
     "async": "",
     "hull.js": "",
+    "geojson-utils":"",
     "victor": ""
   },
   "devDependencies": {

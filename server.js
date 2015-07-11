@@ -131,7 +131,7 @@ var SampleApp = function() {
         });
 
         self.app.use(function(req, res, next) {
-            //console.log("Received request: " + req.url);
+            console.log("Received request: " + req.url);
             next();
         });
 
