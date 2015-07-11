@@ -104,7 +104,7 @@ exports.initialize = function (cb) {
         console.log("Removing " + videoID + " from Database");
         async.series([
             function (callback) {
-                self.mongoDb.collection("videos").deleteOne({VideoId : videoID}, function (err, reply) {
+                self.mongoDb.collection("videos").deleteOne({VideoId: videoID}, function (err, reply) {
                     callback(err);
                 });
             }
@@ -192,25 +192,25 @@ exports.initialize = function (cb) {
 
                                 if (i < wayPoints.length - 1) {
                                     // neighbourPoints.push(wayPoints[i + 1]);
-                                    nextV = new Victor(wayPoints[i+1][0], wayPoints[i+1][1]);
+                                    nextV = new Victor(wayPoints[i + 1][0], wayPoints[i + 1][1]);
                                     if (video.VideoId == logForVideo) {
-                                        console.log("Next WayPoint: " + (i+1) + ": "+ nextV.toString());
+                                        console.log("Next WayPoint: " + (i + 1) + ": " + nextV.toString());
                                     }
                                 }
                                 if (i < 1) {
                                     distances.push(currentV.clone().distance(nextV));
                                     if (video.VideoId == logForVideo) {
-                                        console.log("Current WayPoint No. " + i + ": "+ currentV.toString());
-                                        console.log("Distances Entry nr. " + i + " " + currentV.clone().distance(nextV) );
+                                        console.log("Current WayPoint No. " + i + ": " + currentV.toString());
+                                        console.log("Distances Entry nr. " + i + " " + currentV.clone().distance(nextV));
                                     }
                                 } else {
-                                    prevV = new Victor(wayPoints[i-1][0], wayPoints[i-1][1]);
+                                    prevV = new Victor(wayPoints[i - 1][0], wayPoints[i - 1][1]);
 
-                                    currMinDistance = Math.min(currentV.clone().distance(nextV),currentV.clone().distance(prevV));
+                                    currMinDistance = Math.min(currentV.clone().distance(nextV), currentV.clone().distance(prevV));
 
                                     if (video.VideoId == logForVideo) {
-                                        console.log("WayPoint No. " + i + ": "+ currentV.toString());
-                                        console.log("Distances Entry nr. " + i + " " + currMinDistance );
+                                        console.log("WayPoint No. " + i + ": " + currentV.toString());
+                                        console.log("Distances Entry nr. " + i + " " + currMinDistance);
                                     }
 
                                     //save distance to next point for error calculation
@@ -221,7 +221,7 @@ exports.initialize = function (cb) {
                                     }
                                 }
 
-                                     //distancesCurrent.push(Math.min(currentV.distance(prevV),currentV.distance((nextV))));
+                                //distancesCurrent.push(Math.min(currentV.distance(prevV),currentV.distance((nextV))));
 
                                 //for (var j = 0; j < neighbourPoints.length; j++) {
 
@@ -236,25 +236,23 @@ exports.initialize = function (cb) {
                             }
                             if (averageDistance != 0) {
                                 averageDistance /= parseFloat(avDCounter);
-                            }
-                            if (video.VideoId == logForVideo) {
-                                console.log("Average Distance is " + averageDistance );
-                                console.log("Number of entries= " + avDCounter);
-                            }
 
+                                if (video.VideoId == logForVideo) {
+                                    console.log("Average Distance is " + averageDistance);
+                                    console.log("Number of entries= " + avDCounter);
+                                }
 
-                            if (averageDistance != 0) {
                                 for (i = 0; i < wayPoints.length; i++) {
                                     currentV = new Victor(wayPoints[i][0], wayPoints[i][1]);
                                     if (video.VideoId == logForVideo) {
-                                        console.log("Current Point: " + i + ": " + currentV );
+                                        console.log("Current Point: " + i + ": " + currentV);
                                     }
                                     //var neighbourPoints = [];
                                     //previous point
                                     //if (i > 0)
                                     //    neighbourPoints.push(wayPoints[i - 1]);
                                     //next point
-                                   // if (i < wayPoints.length - 1)
+                                    // if (i < wayPoints.length - 1)
                                     //    neighbourPoints.push(wayPoints[i + 1]);
 
                                     var currMinDistance = distances[i];
@@ -295,26 +293,25 @@ exports.initialize = function (cb) {
                                             if (tooLongCounter > 0 || noDistCounter > 0) {
                                                 var falsePoints = tooLongCounter + noDistCounter;
                                                 var saveCount = falsePoints;
-                                                if (i-falsePoints > 0) { //if things weren't already wrong from the beginning
+                                                if (i - falsePoints > 0) { //if things weren't already wrong from the beginning
                                                     if (video.VideoId == logForVideo) {
                                                         console.log("Error is in the middle" + i);
                                                     }
                                                     //last point before things got weird
-                                                    var lastLongV = new Victor(wayPoints[i-falsePoints][0],wayPoints[i-falsePoints][1]);
+                                                    var lastLongV = new Victor(wayPoints[i - falsePoints][0], wayPoints[i - falsePoints][1]);
                                                     if (video.VideoId == logForVideo) {
-
-                                                        console.log("Last Regular Point: Index " + (i-falsePoints) + "coords:" + lastLongV.toString());
+                                                        console.log("Last Regular Point: Index " + (i - falsePoints) + "coords:" + lastLongV.toString());
                                                     }
                                                     falsePoints--;
                                                     var o = 1;
                                                     while (falsePoints != 0) {
                                                         //TODO: do vector magic
                                                         interpol = lastLongV.clone().mix(currentV, o / saveCount);
-                                                        wayPoints[i-falsePoints][0]=interpol.x;
-                                                        wayPoints[i-falsePoints][1]=interpol.y;
+                                                        wayPoints[i - falsePoints][0] = interpol.x;
+                                                        wayPoints[i - falsePoints][1] = interpol.y;
 
                                                         if (video.VideoId == logForVideo) {
-                                                            console.log("Interpolate: Index " + (i-falsePoints) + "coords:" + interpol.toString());
+                                                            console.log("Interpolate: Index " + (i - falsePoints) + "coords:" + interpol.toString());
                                                         }
 
                                                         falsePoints--;
@@ -329,21 +326,21 @@ exports.initialize = function (cb) {
                                                         console.log("Was wrong from the beginning: Index " + i + " :" + currentV.toString());
                                                     }
                                                     var u = 1;
-                                                    nextV = new Victor(wayPoints[i+1][0],wayPoints[i+1][1]);
+                                                    nextV = new Victor(wayPoints[i + 1][0], wayPoints[i + 1][1]);
                                                     nextV.subtract(currentV); // save distance vector to nextV in nextV
                                                     if (video.VideoId == logForVideo) {
                                                         console.log("First Regular Distance: Index " + i + " coords:" + nextV.toString());
                                                     }
                                                     var currentCopy = currentV.clone(); //get a copy of currentV to work with
-                                                    while(falsePoints > 0) {
+                                                    while (falsePoints > 0) {
                                                         if (u <= maxArtificialWaypoints) {
                                                             currentCopy.subtract(nextV);
-                                                            distances[i-u] = nextV.length();
+                                                            distances[i - u] = nextV.length();
                                                         } else {
-                                                            distances[i-u] = 0;
+                                                            distances[i - u] = 0;
                                                         }
-                                                        wayPoints[i-u][0] = currentCopy.x;
-                                                        wayPoints[i-u][1] = currentCopy.y;
+                                                        wayPoints[i - u][0] = currentCopy.x;
+                                                        wayPoints[i - u][1] = currentCopy.y;
                                                         if (video.VideoId == logForVideo) {
                                                             console.log("Added artificial point at " + currentCopy.toString());
                                                         }
@@ -400,6 +397,8 @@ exports.initialize = function (cb) {
                                     //    }
                                     //}
                                 }
+                            } else {
+                                videosToDelete.push(video.VideoId);
                             }
                             //console.log("VideoID:"+video._id);
                             //videos.remove(video.id);
@@ -420,17 +419,16 @@ exports.initialize = function (cb) {
             //filer function
             function (videos, skip, callback) {
                 console.log("Videos to filter: " + videos.length + ". Objects to exclude:" + skip.length);
-                async.reject(videos, function(item, callback) {
+                async.reject(videos, function (item, callback) {
                     var i = 0;
                     for (var i = 0; i < skip.length; i++) {
                         if (skip[i] == item.VideoId) {
                             return callback(true);
                         }
-                        //console.log("to compare:" + skip[i] + "\n with " + item.VideoId);
                     }
                     return callback(false);
-                }, function(results) {
-                        callback(null, results);
+                }, function (results) {
+                    callback(null, results);
                 })
             },
 
@@ -480,11 +478,11 @@ exports.initialize = function (cb) {
                 console.log("Getting list of video points from MediaQ server...");
                 var cones = [];
                 self.mongoDb.collection("videos").find({}).toArray(function (err, docs) {
-                   if (err) {
-                       callback(err);
-                   } else {
-                       docs.forEach(function(video) {
-                           video.trajectory.coordinates.forEach(function(point) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        docs.forEach(function (video) {
+                            video.trajectory.coordinates.forEach(function (point) {
                                 cones.push({
                                     VideoId: video.VideoId,
                                     Plat: point[1],
@@ -494,10 +492,10 @@ exports.initialize = function (cb) {
                                     ThetaX: point[4],
                                     cone: getViewConePolygon(point[1], point[0], point[4])
                                 })
-                           });
-                       });
-                       callback(null, cones);
-                   }
+                            });
+                        });
+                        callback(null, cones);
+                    }
                 });
 
             },
