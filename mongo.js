@@ -165,7 +165,7 @@ exports.initialize = function (cb) {
 
                             if (wayPoints.length < minimumWaypoints) {
                                 videosToDelete.push(video.VideoId);
-                                console.log("added " + video.VideoId + " to array");
+                                // console.log("added " + video.VideoId + " to array");
                             }
 
                             if (video.VideoId == logForVideo) {
@@ -210,7 +210,7 @@ exports.initialize = function (cb) {
 
                                     if (video.VideoId == logForVideo) {
                                         console.log("WayPoint No. " + i + ": " + currentV.toString());
-                                        console.log("Distances Entry nr. " + i + " " + currMinDistance);
+                                        console.log("Distances Entry nr. " + i + " " + currentV.clone().distance(nextV));
                                     }
 
                                     //save distance to next point for error calculation
@@ -236,7 +236,9 @@ exports.initialize = function (cb) {
                             }
                             if (averageDistance != 0) {
                                 averageDistance /= parseFloat(avDCounter);
-
+                                if (avDCounter <= minimumWaypoints ) {
+                                    videosToDelete.push(video.VideoId);
+                                }
                                 if (video.VideoId == logForVideo) {
                                     console.log("Average Distance is " + averageDistance);
                                     console.log("Number of entries= " + avDCounter);
@@ -264,7 +266,7 @@ exports.initialize = function (cb) {
                                             }
 
                                             // distance beyond average
-                                            if (tooLongCounter == 0 && i > 0) { //save last good point
+                                            if (tooLongCounter == 0 && noDistCounter == 0 && i > 0) { //save last good point
                                                 wayPoints[i][0] = currentV.x;
                                                 wayPoints[i][1] = currentV.y;
                                                 if (video.VideoId == logForVideo) {
@@ -277,7 +279,7 @@ exports.initialize = function (cb) {
                                                 console.log("The distance is zero at Index " + i + "current:" + currMinDistance);
                                             }
                                             // distance exactly 0 -> cell position
-                                            if (noDistCounter == 0) { //save last good point
+                                            if (tooLongCounter == 0 && noDistCounter == 0) { //save last good point
                                                 wayPoints[i][0] = currentV.x;
                                                 wayPoints[i][1] = currentV.y;
                                                 if (video.VideoId == logForVideo) {
@@ -342,7 +344,7 @@ exports.initialize = function (cb) {
                                                         wayPoints[i - u][0] = currentCopy.x;
                                                         wayPoints[i - u][1] = currentCopy.y;
                                                         if (video.VideoId == logForVideo) {
-                                                            console.log("Added artificial point at " + currentCopy.toString());
+                                                            console.log("Added artificial point at Index " + (i-u) + ": " + currentCopy.toString());
                                                         }
                                                         falsePoints--;
                                                         u++;
