@@ -100,6 +100,17 @@ exports.initialize = function (cb) {
         });
     }
 
+    function deleteOne(callback, videoID) {
+        console.log("Removing " + videoID + " from Database");
+        async.series([
+            function (callback) {
+                self.mongoDb.collection("videos").deleteOne({VideoId : videoID}, function (err, reply) {
+                    callback(err);
+                });
+            }
+        ]);
+    }
+
     function buildTrajectories(cb) {
         async.waterfall([
             // Get a list of videos from the MediaQ server
@@ -131,11 +142,12 @@ exports.initialize = function (cb) {
             // Load the trajectory for each video
             function (videos, callback) {
                 console.log("Loading trajectories for videos...");
-                var logForVideo = "3au5lvlyqs86_2014_7_16_Videotake_1405554104837.mp4";
-                var minimumWaypoints = 0;
+                var logForVideo = ""; //leave empty if no log desired
+                var minimumWaypoints = 20;
                 var maxArtificialWaypoints = 5;
+                var videosToDelete = [];
 
-                async.each(videos, function (video, callback) {
+                async.forEachOf(videos, function (video, key, callback) {
                     var sql =
                         "SELECT FovNum, Plat, Plng, TimeCode, ThetaX, ThetaY, ThetaZ, R, Alpha" +
                         " FROM VIDEO_METADATA " +
@@ -152,10 +164,8 @@ exports.initialize = function (cb) {
                             });
 
                             if (wayPoints.length < minimumWaypoints) {
-                                // .log
-                                // ("VideoID " + video.VideoId + "was skipped because it is too short.");
-                                callback();
-                                return; //if trajectory has less than minimumWaypoints don't proceed
+                                videosToDelete.push(video.VideoId);
+                                console.log("added " + video.VideoId + " to array");
                             }
 
                             if (video.VideoId == logForVideo) {
@@ -230,7 +240,6 @@ exports.initialize = function (cb) {
                             if (video.VideoId == logForVideo) {
                                 console.log("Average Distance is " + averageDistance );
                                 console.log("Number of entries= " + avDCounter);
-
                             }
 
 
@@ -392,23 +401,42 @@ exports.initialize = function (cb) {
                                     //}
                                 }
                             }
+                            //console.log("VideoID:"+video._id);
+                            //videos.remove(video.id);
 
                             video.trajectory = new geoJson.LineString(wayPoints);
-                            callback();
+                            callback(null);
                         }
                     });
                 }, function (err) {
                     if (err) {
                         callback(err);
                     } else {
-                        callback(null, videos);
+                        callback(null, videos, videosToDelete);
                     }
+                })
+            },
+
+            //filer function
+            function (videos, skip, callback) {
+                console.log("Videos to filter: " + videos.length + ". Objects to exclude:" + skip.length);
+                async.reject(videos, function(item, callback) {
+                    var i = 0;
+                    for (var i = 0; i < skip.length; i++) {
+                        if (skip[i] == item.VideoId) {
+                            return callback(true);
+                        }
+                        //console.log("to compare:" + skip[i] + "\n with " + item.VideoId);
+                    }
+                    return callback(false);
+                }, function(results) {
+                        callback(null, results);
                 })
             },
 
             // Insert all videos into mongo
             function (videos, callback) {
-                console.log("Inserting videos into mongo...");
+                console.log("Inserting " + videos.length + " videos into mongo...");
                 self.mongoDb.collection("videos").insertMany(videos, function (err, reply) {
                     if (err) {
                         callback(err);
