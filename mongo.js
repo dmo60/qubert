@@ -131,8 +131,8 @@ exports.initialize = function (cb) {
             // Load the trajectory for each video
             function (videos, callback) {
                 console.log("Loading trajectories for videos...");
-                var logForVideo = "8nr3p0wvr3fq_2014_10_28_Videotake_1414509951865.mp4";
-                var minimumWaypoints = 30;
+                var logForVideo = "3au5lvlyqs86_2014_7_16_Videotake_1405554104837.mp4";
+                var minimumWaypoints = 0;
                 var maxArtificialWaypoints = 5;
 
                 async.each(videos, function (video, callback) {
@@ -152,9 +152,10 @@ exports.initialize = function (cb) {
                             });
 
                             if (wayPoints.length < minimumWaypoints) {
-                                console.log("VideoID " + video.VideoId + "was skipped because it is too short.");
-                                //callback();
-                                //return; //if trajectory has less than minimumWaypoints don't proceed
+                                // .log
+                                // ("VideoID " + video.VideoId + "was skipped because it is too short.");
+                                callback();
+                                return; //if trajectory has less than minimumWaypoints don't proceed
                             }
 
                             if (video.VideoId == logForVideo) {
@@ -183,13 +184,13 @@ exports.initialize = function (cb) {
                                     // neighbourPoints.push(wayPoints[i + 1]);
                                     nextV = new Victor(wayPoints[i+1][0], wayPoints[i+1][1]);
                                     if (video.VideoId == logForVideo) {
-                                        console.log("Next WayPoint: " + (i+1) + ": "+ nextV.toString())
+                                        console.log("Next WayPoint: " + (i+1) + ": "+ nextV.toString());
                                     }
                                 }
                                 if (i < 1) {
                                     distances.push(currentV.clone().distance(nextV));
                                     if (video.VideoId == logForVideo) {
-                                        console.log("Current WayPoint No. " + i + ": "+ currentV.toString())
+                                        console.log("Current WayPoint No. " + i + ": "+ currentV.toString());
                                         console.log("Distances Entry nr. " + i + " " + currentV.clone().distance(nextV) );
                                     }
                                 } else {
@@ -198,14 +199,14 @@ exports.initialize = function (cb) {
                                     currMinDistance = Math.min(currentV.clone().distance(nextV),currentV.clone().distance(prevV));
 
                                     if (video.VideoId == logForVideo) {
-                                        console.log("WayPoint No. " + i + ": "+ currentV.toString())
+                                        console.log("WayPoint No. " + i + ": "+ currentV.toString());
                                         console.log("Distances Entry nr. " + i + " " + currMinDistance );
                                     }
 
                                     //save distance to next point for error calculation
                                     distances.push(currentV.clone().distance(nextV));
                                     if (currMinDistance != 0) {
-                                        averageDistance += currMinDistance
+                                        averageDistance += currMinDistance;
                                         avDCounter++;
                                     }
                                 }
@@ -223,9 +224,13 @@ exports.initialize = function (cb) {
 
                                 //magic number 0.006
                             }
-                            averageDistance /= parseFloat(avDCounter);
+                            if (averageDistance != 0) {
+                                averageDistance /= parseFloat(avDCounter);
+                            }
                             if (video.VideoId == logForVideo) {
                                 console.log("Average Distance is " + averageDistance );
+                                console.log("Number of entries= " + avDCounter);
+
                             }
 
 
@@ -323,16 +328,28 @@ exports.initialize = function (cb) {
                                                     var currentCopy = currentV.clone(); //get a copy of currentV to work with
                                                     while(falsePoints > 0) {
                                                         if (u <= maxArtificialWaypoints) {
-                                                            currentCopy.subtract(nextV)
+                                                            currentCopy.subtract(nextV);
                                                             distances[i-u] = nextV.length();
                                                         } else {
                                                             distances[i-u] = 0;
                                                         }
                                                         wayPoints[i-u][0] = currentCopy.x;
                                                         wayPoints[i-u][1] = currentCopy.y;
+                                                        if (video.VideoId == logForVideo) {
+                                                            console.log("Added artificial point at " + currentCopy.toString());
+                                                        }
                                                         falsePoints--;
                                                         u++;
                                                     }
+                                                    if (video.VideoId == logForVideo) {
+                                                        console.log("Setting Point " + currentCopy.toString() + " as new start point");
+                                                        console.log("Previous Start Point was :" + video.location.coordinates[0] + "," + video.location.coordinates[1]);
+                                                        console.log()
+                                                    }
+                                                    //video.location = new geoJson.Point(currentCopy.x,currentCopy.y);
+                                                    video.location.coordinates[0] = currentCopy.x;
+                                                    video.location.coordinates[1] = currentCopy.y;
+
                                                 }
                                                 tooLongCounter = 0;
                                                 noDistCounter = 0;
@@ -377,8 +394,6 @@ exports.initialize = function (cb) {
                             }
 
                             video.trajectory = new geoJson.LineString(wayPoints);
-
-
                             callback();
                         }
                     });
