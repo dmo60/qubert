@@ -222,8 +222,6 @@ $(document).ready(function () {
                 var curr = data.videos[i];
 
                 var video = getVideoForId(curr.VideoId);
-                if (isInVideoPath(video))
-                    continue;
                 if (!video) {
                     video = new Video(curr.VideoId, curr.location.coordinates[1],
                         curr.location.coordinates[0]);
@@ -231,6 +229,9 @@ $(document).ready(function () {
                     videos.push(video);
                 }
 
+                if (isInVideoPath(video))
+                    continue;
+                
                 video.setTrajecotry(curr.trajectory.coordinates);
                 video.intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
                 vid.intersectionVideos.push(video);
