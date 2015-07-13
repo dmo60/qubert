@@ -166,7 +166,7 @@ $(document).ready(function () {
         hideUnselectedVideos();
 
         updateCenter(video.position);
-        showVideo(currentVideo.id);
+        showVideoAtTime(currentVideo.id);
     }
 
     function onMapClicked() {
@@ -332,13 +332,18 @@ $(document).ready(function () {
         video = $(newVideoID)[0];
 
         newVideo.src = getVideoUrl(id);
+        newVideo.style.display="block";
+
         newVideo.addEventListener("loadeddata", function () {
 
-            $(newVideoID)[0].currentTime = time;
+            if(time!=undefined){
+                $(newVideoID)[0].currentTime = time;}
             $(oldvideoID).animate({
                 opacity: 0
             }, 500, function () {
                 oldVideo.pause();
+                oldVideo.style.display="none";
+
             });
             $(oldvideoID).off("play");
 
@@ -358,44 +363,7 @@ $(document).ready(function () {
         });
     }
 
-    function showVideo(id) {
-        //$(video).removeAttribute("controls");
-        $("#overlay").animate({
-            width: "20%"
-        }, 250);
 
-        var oldvideoID = "#video" + videoPlayer;
-        var oldVideo = document.getElementById("video" + videoPlayer);
-        videoPlayer = (videoPlayer == 0) ? 1 : 0;
-        var newVideoID = "#video" + videoPlayer;
-        var newVideo = document.getElementById("video" + videoPlayer);
-        video = $(newVideoID)[0];
-
-        newVideo.src = getVideoUrl(id);
-        newVideo.addEventListener("loadeddata", function () {
-            $(oldvideoID).animate({
-                opacity: 0
-            }, 500, function () {
-                oldVideo.pause();
-            });
-            $(oldvideoID).off("play");
-
-
-            $(newVideoID).animate({
-                opacity: 1
-            }, 500);
-
-
-            $(newVideoID).on("play", function () {
-                $(canvas).width($(video).width());
-                $(canvas).height($(video).height());
-
-
-                onVideoProgress();
-            });
-
-        });
-    }
 
     function onVideoProgress() {
         if (video.paused || video.ended) {
