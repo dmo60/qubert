@@ -214,12 +214,28 @@ $(document).ready(function () {
 
     function getIntersectionVideos(vid) {
         var id = vid.id;
+        var onIntersectionVideo = vid.intersectionMarker!=null;
+        var polylineGeoJson = null;
+
+        if(onIntersectionVideo) {
+            polylineGeoJson = { "type": "LineString", "coordinates": [] };
+            vid.polyline.getPath().forEach(function (latlng) {
+                polylineGeoJson.coordinates.push([latlng.lng(),latlng.lat()]);
+            });
+        }
+
         console.log("id:" + id);
         $.get(getURLforIntersections(id), function (data) {
             console.log("replies:" + data.videos.length);
             for (var i = 0; i < data.videos.length; i++) {
 
                 var curr = data.videos[i];
+
+                if(onIntersectionVideo) {
+                    console.log("lineintersects: "+lineStringsIntersect(curr.trajectory,polylineGeoJson));
+                    if(!lineStringsIntersect(curr.trajectory,polylineGeoJson))
+                        continue;
+                }
 
                 var video = getVideoForId(curr.VideoId);
                 if (!video) {
@@ -647,7 +663,6 @@ var Video = function (id, lat, lng) {
     this.isAtSplitPoint = function (seconds) {
         if (self.splitPoint == null || self.splitPoint == undefined)
             return false;
-        console.log("checking");
         var point = getPointForSecond(seconds);
         var nextpoint = getPointForSecond((seconds + 1));
         var latLng1 = new google.maps.LatLng(point[1], point[0]);
