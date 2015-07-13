@@ -586,6 +586,8 @@ var Video = function (id, lat, lng) {
 
                 if (self.splitPoint != null && google.maps.geometry.poly.containsLocation(self.splitPoint, polyline)) {
                     isbeforeSplit = false;
+                    waypoints.push(self.splitPoint);
+                    splitpoints.push(self.splitPoint);
                 }
             }
             if (isbeforeSplit)
