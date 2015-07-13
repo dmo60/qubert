@@ -190,7 +190,13 @@ $(document).ready(function () {
             videoPath = [];
             showAllVideos();
 
+            $("#overlay").animate({
+                width: "0%"
+            }, 250);
+
         }
+
+
 
     }
 
@@ -338,6 +344,9 @@ $(document).ready(function () {
 
     function showVideo(id) {
         //$(video).removeAttribute("controls");
+        $("#overlay").animate({
+            width: "20%"
+        }, 250);
 
         var oldvideoID = "#video" + videoPlayer;
         var oldVideo = document.getElementById("video" + videoPlayer);
@@ -578,29 +587,29 @@ var Video = function (id, lat, lng) {
                 splitpoints.push(new google.maps.LatLng(a[1], a[0]));
 
         }
-        var lineSymbol = {
-            path: 'M -1,0 0,-2 1,0',
-            strokeOpacity: 1,
-            scale: 3
-        };
+        //var lineSymbol = {
+        //    path: 'M -1,0 0,-2 1,0',
+        //    strokeOpacity: 1,
+        //    scale: 3
+        //};
 
         self.polyline = new google.maps.Polyline({
             path: waypoints,
-            strokeColor: "blue",
+            strokeColor: "#DF4949",
             strokeOpacity: 1.0,
             strokeWeight: 3,
-            icons: [{
-                icon: lineSymbol,
-                offset: '0',
-                repeat: '10px'
-            }],
+            //icons: [{
+            //    icon: lineSymbol,
+            //    offset: '0',
+            //    repeat: '10px'
+            //}],
             map: map
         });
         if (self.splitPoint != null) {
             self.splitPolyline = new google.maps.Polyline({
                 path: splitpoints,
-                strokeColor: "gray",
-                strokeOpacity: 1.0,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
                 strokeWeight: 3,
                 map: map
             });
@@ -632,9 +641,9 @@ var Video = function (id, lat, lng) {
     this.drawPositionMarker = function (map) {
         var image = {
             url: "img/position.png",
-            size: new google.maps.Size(25, 25),
+            size: new google.maps.Size(25, 45),
             origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(12.5, 12.5)
+            anchor: new google.maps.Point(12.5, 45)
         };
 
         self.positionMarker = new google.maps.Marker({
@@ -741,8 +750,15 @@ var Video = function (id, lat, lng) {
             self.intersectionMarker = null;
         }
 
+        var markerimage = {
+            url: "img/icon_intersection.png",
+            size: new google.maps.Size(22, 22),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(11, 11)
+        };
+
         self.intersectionMarker = new google.maps.Marker({
-            icon: 'img/icon_intersection.png',
+            icon: markerimage,
             position: latlng,
             map: map
         });
@@ -750,7 +766,8 @@ var Video = function (id, lat, lng) {
         self.intersectionPolyline = new google.maps.Polyline({
             path: routePoints,
             strokeWeight: 3,
-            strokeColor: "gray",
+            strokeColor: "#FFFFFF",
+            strokeOpacity: 0.5,
             map: map
         });
     };

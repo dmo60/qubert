@@ -4,13 +4,14 @@
     <style type="text/css">
         #overlay {
             position: absolute;
-            left: 0;
-            top: 70%;
-            width: 100%;
-            height: 30%;
+            right: 0;
+            top: 0;
+            width: 20%;
+            height: 100%;
             z-index: 2;
             pointer-events: none;
-            background-color: rgba(225, 255, 255, .3);
+            background-color: #344D5C;
+            border-left: solid 2px white;
 
         }
 
@@ -26,15 +27,17 @@
         video, #canvas {
             opacity: 1;
             z-index: 3;
-            height: 100%;
+            height: 94%;
+
         }
 
         #container {
+            background-color:#DF4949;
             display: block;
             margin-left: auto;
             margin-right: auto;
-            width: 400px;
-            height: 100%;
+            width: 100%;
+            height: 200px;
             position: relative;
 
         }
@@ -63,6 +66,15 @@
             border-radius: 50%;
 
         }
+
+        #logo{
+            width: 119px;
+            height: 136px;
+            display:block;
+            margin:auto;
+            padding: 10px;
+
+        }
     </style>
     <script type="text/javascript"
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkjmSvcMqjjrt-eV0pSaIeLhIKjBJgx4">
@@ -75,7 +87,9 @@
 <body>
 <div id="map-canvas"></div>
 <div id="overlay">
+    <img src="img/logo.png" id ="logo">
     <div id="container">
+        
         <video id="video0" controls autoplay ></video>
         <video id="video1" controls autoplay></video>
         <canvas id="canvas"></canvas>
