@@ -231,7 +231,7 @@ $(document).ready(function () {
 
                 if (isInVideoPath(video))
                     continue;
-                
+
                 video.setTrajecotry(curr.trajectory.coordinates);
                 video.intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
                 vid.intersectionVideos.push(video);
@@ -423,7 +423,8 @@ $(document).ready(function () {
             var curr = videoPath[i];
             if (curr.videoPathDepth < currentIndex) {
                 curr.intersectionVideos.forEach(function (video) {
-                    video.removeIntersectionPolyline();
+                    if(video.id!=currentVideo.id)
+                    video.removeIntersectionRoute();
                 });
                 curr.intersectionVideos = [];
             }
