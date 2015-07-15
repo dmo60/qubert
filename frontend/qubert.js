@@ -209,7 +209,7 @@ $(document).ready(function () {
     }
 
     function updateCenter(pos) {
-        // map.panTo(pos);
+        map.panTo(pos);
     }
 
     function showAllVideos() {
@@ -762,6 +762,7 @@ var Video = function (id, lat, lng) {
             map: map
         });
     };
+
     this.onIntersectionClick = function (callback) {
         google.maps.event.addListener(self.intersectionMarker, "click", function () {
             callback(self);
@@ -769,7 +770,7 @@ var Video = function (id, lat, lng) {
         google.maps.event.addListener(self.intersectionPolyline, "click", function () {
             callback(self);
         });
-    }
+    };
 
     this.removeIntersectionPolyline = function () {
         if (self.intersectionPolyline != null) {

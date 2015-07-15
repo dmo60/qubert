@@ -103,10 +103,12 @@ var SampleApp = function() {
     self.createRoutes = function() {
         self.routes = { };
 
+        /*
         self.routes['/'] = function(req, res) {
             res.setHeader('Content-Type', 'text/html');
             res.send(self.cache_get('index.html') );
         };
+        */
 
         self.routes['/test'] = test.RequestHandler;
         self.routes['/videos'] = videos.RequestHandler;
