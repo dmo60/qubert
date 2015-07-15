@@ -2,16 +2,19 @@
 <html>
 <head>
     <style type="text/css">
+        video::-webkit-media-controls-fullscreen-button {
+            display: none;
+        }
+        
         #overlay {
             position: absolute;
             right: 0;
             top: 0;
-            width: 20%;
+            width: 30%;
             height: 100%;
             z-index: 2;
 
-            background-color: #344D5C;
-            border-left: solid 2px white;
+            background-color: #000000;
 
         }
 
@@ -31,12 +34,12 @@
 
         }
 
-        #container {
-            background-color:#DF4949;
+        .container {
+
             display: block;
             margin-left: auto;
             margin-right: auto;
-            width: 100%;
+            width: 90%;
             height: 200px;
             position: relative;
 
@@ -47,6 +50,7 @@
             top: 0;
             left: 0;
             pointer-events: auto;
+            width: 100%;
 
         }
 
@@ -55,6 +59,7 @@
             top: 0;
             left: 0;
             pointer-events: auto;
+            width: 100%;
 
         }
 
@@ -92,18 +97,21 @@
 <div id="map-canvas"></div>
 <div id="overlay">
     <img src="img/logo.png" id ="logo">
-    <div id="container">
+    <h3 style="color:#ffffff; text-align: center">You walked: 1000m</h3>
+    <div class="container">
         
         <video id="video0" controls autoplay ></video>
         <video id="video1" controls autoplay></video>
         <canvas id="canvas"></canvas>
     </div>
-    <p>
-        <label for="spinner">Minimal Path length</label>
+
+    <div class="container">
+
+    <label for="spinner" style="color: #ffffff">Minimal Path length</label>
 
         <input id="spinner" name="value">
         <button id="setMinDist">Set</button>
-    </p>
+    </div>
 
 </div>
 </body>
