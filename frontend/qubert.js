@@ -281,9 +281,9 @@ $(document).ready(function () {
                 return;
             }
         }
-
         videoPath.push(video);
         video.videoPathDepth = currentIndex + 1;
+        console.log("Video added to path. currentIndex:"+currentIndex);
     }
 
     function drawVideoPath() {
@@ -375,19 +375,21 @@ $(document).ready(function () {
         if (video.paused || video.ended) {
             return;
         }
-        if (currentVideo.isAtSplitPoint(Math.round(video.currentTime))) {
-            getNextVideo();
-        }
         currentVideo.updatePositionMarker(Math.round(video.currentTime));
+        if (currentVideo.splitTime!=null&&Math.round(video.currentTime)>currentVideo.splitTime) {
+            getNextVideo();
+            return;
+        }
         setTimeout(onVideoProgress, 1000);
     }
 
     function intersectionClicked(video) {
-        console.log("clicked Intersection " + video.id);
         currentVideo.splitPoint = video.intersectionMarker.getPosition();
+        currentVideo.splitTime = video.getSecondsforPoint(currentVideo.splitPoint);
         removeOtherSelectionFromPath();
         addToVideoPath(video);
         drawVideoPath();
+        console.log("clicked Intersection " + video.id +"currentIndex"+currentIndex);
     }
 
     function isInVideoPath(video) {
@@ -402,15 +404,18 @@ $(document).ready(function () {
     }
 
     function getNextVideo() {
-        currentVideo.removeSplitPolyline();
-        videoPath[currentIndex + 1].positionMarker = currentVideo.positionMarker;
-        //currentVideo.removePositionMarker();
-        currentVideo = videoPath[currentIndex + 1];
+
         video.pause();
+        currentVideo.removeSplitPolyline();
+        currentIndex++;
+        console.log("currentindex:"+currentIndex+"videoPath:"+videoPath);
+        videoPath[currentIndex].positionMarker = currentVideo.positionMarker;
+        //currentVideo.removePositionMarker();
+        currentVideo = videoPath[currentIndex];
         var time = currentVideo.getSecondsforPoint(currentVideo.intersectionMarker.position);
         console.log("time is:" + time);
         showVideoAtTime(currentVideo.id, time);
-        currentIndex++;
+
         removeOldIntersections();
         getIntersectionVideos(currentVideo);
         drawVideoPath();
@@ -451,10 +456,14 @@ var Video = function (id, lat, lng) {
     this.trajectory = null;
     this.polyline = null;
     this.positionMarker = null;
+
     this.intersectionPolyline = null;
     this.intersectionMarker = null;
+    this.intersectionTime=null;
+
     this.splitPoint = null;
     this.splitPolyline = null;
+    this.splitTime=null;
 
     this.intersectionVideos = [];
 
