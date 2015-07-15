@@ -1,17 +1,24 @@
 var url = "http://127.0.0.1:8080";
 
 $(document).ready(function () {
+    //the current google map
     var map;
+    //the html 5 video
     var video = $("#video")[0];
     var canvas = $("#canvas")[0];
 
+    //list of all videos loaded from the server
     var videos = [];
+    //the currently shown video object (not the actual video, see above)
     var currentVideo = null;
 
-    var nextVideo = null;
-    var currentIndex = 0;
+    //a list of video objects which form the path the user is currently in
     var videoPath = [];
+    // the index of the current video in the path
+    var currentIndex = 0;
 
+    //variable for checking which videoplayer you're in
+    //there are two for smooth siwtching between videos
     var videoPlayer = 0;
 
     var isPlaying = false;
@@ -77,15 +84,19 @@ $(document).ready(function () {
         });
     }
 
+    //clicked on a video marker (so that the video starts)
     function videoMarkerClicked(video) {
         isPlaying = true;
         currentVideo = video;
+
+        //reset the videopath and push the clicked video onto it
         videoPath = [];
         currentIndex = 0;
         videoPath.push(currentVideo);
         //video.drawPath(map);
         currentVideo.drawPositionMarker(map);
         currentVideo.videoPathDepth = 0;
+
         drawVideoPath();
 
         getIntersectionVideos(currentVideo);
@@ -95,6 +106,7 @@ $(document).ready(function () {
         showVideoAtTime(currentVideo.id, 0);
     }
 
+    //clicked on map to reset
     function onMapClicked() {
         isPlaying = false;
         videoPath.forEach(function (vid) {
@@ -143,11 +155,14 @@ $(document).ready(function () {
         })
     }
 
+    //get intersections for vid
     function getIntersectionVideos(vid) {
         var id = vid.id;
         var onIntersectionVideo = vid.intersectionMarker != null;
         var polylineGeoJson = null;
 
+        //if video has previously been a intersection in the path,
+        //get current polyline so that you only draw intersections after the split
         if (onIntersectionVideo) {
             polylineGeoJson = {"type": "LineString", "coordinates": []};
             vid.polyline.getPath().forEach(function (latlng) {
@@ -162,6 +177,9 @@ $(document).ready(function () {
 
                 var curr = data.videos[i];
 
+
+                //if video has previously been a intersection in the path,
+                //check if the new intersection intersects with the old one so that you only draw intersections after the split
                 if (onIntersectionVideo) {
                     console.log("lineintersects: " + lineStringsIntersect(curr.trajectory, polylineGeoJson));
                     if (!lineStringsIntersect(curr.trajectory, polylineGeoJson))
@@ -190,7 +208,7 @@ $(document).ready(function () {
         });
     }
 
-
+    //removes intersections from videos further back in the path so they can be set as intersections for the new one
     function removeOtherSelectionFromPath() {
         for (var i = 0; i < videoPath.length; i++) {
             if (videoPath[i].videoPathDepth > currentIndex) {
@@ -204,6 +222,7 @@ $(document).ready(function () {
     }
 
     function addToVideoPath(video) {
+        //check if it's already in the path
         for (var i = 0; i < videoPath.length; i++) {
             if (videoPath[i].id == video.id) {
                 return;
@@ -214,11 +233,14 @@ $(document).ready(function () {
         console.log("Video added to path. currentIndex:" + currentIndex);
     }
 
+    //interate through videoPath and draw every video
     function drawVideoPath() {
         for (var i = 0; i < videoPath.length; i++) {
             var curr = videoPath[i];
 
             curr.drawPath(map);
+
+            //draw intersections if you reach the current video
             if (curr.videoPathDepth == currentIndex) {
                 curr.intersectionVideos.forEach(function (video) {
 
@@ -229,13 +251,14 @@ $(document).ready(function () {
                     video.intersectionTime=currentVideo.getSecondsforPoint(video.intersectionMarker.position);
                     video.onIntersectionClick(intersectionClicked);
                 });
+                //only draw the line after the split for the current video
             } else curr.removeSplitPolyline();
 
         }
 
     }
 
-
+    //check if video is already initialized, returns undefined if not.
     function getVideoForId(id) {
         for (var i = 0; i < videos.length; i++) {
             if (videos[i].id == id) {
@@ -245,6 +268,7 @@ $(document).ready(function () {
         return undefined;
     }
 
+    //get url for the bounds of the map
     function getURLfromBounds() {
         var bounds = map.getBounds();
         var ret = url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
@@ -255,7 +279,6 @@ $(document).ready(function () {
             "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + minDistance;
 
     }
-
 
     function showVideoAtTime(id, time) {
 
@@ -310,6 +333,8 @@ $(document).ready(function () {
             return;
         }
         currentVideo.updatePositionMarker(Math.round(video.currentTime));
+        //if the video is split, check if the current time is after the split
+        //if yes, jump to the next video;
         if (currentVideo.splitTime != null && Math.round(video.currentTime) > currentVideo.splitTime) {
             getNextVideo();
             return;
@@ -317,16 +342,27 @@ $(document).ready(function () {
         setTimeout(onVideoProgress, 1000);
     }
 
+    //an intersection/an intersection marker was clicked
     function intersectionClicked(vid) {
+        //only allow click after where the video currently is at
         if(video.currentTime>vid.intersectionTime)
             return;
+
+        //set the split point for splitting the current Video
         currentVideo.splitPoint = vid.intersectionMarker.getPosition();
         currentVideo.splitTime = currentVideo.getSecondsforPoint(currentVideo.splitPoint);
+
+        //remove other selected Intersections
         removeOtherSelectionFromPath();
+
+        //add the intersection to the path
         addToVideoPath(vid);
+
+        //draw the new path.
         drawVideoPath();
     }
 
+    //check if video is already in videoPath
     function isInVideoPath(video) {
         for (var i = 0; i < videoPath.length; i++) {
             var curr = videoPath[i];
@@ -338,24 +374,35 @@ $(document).ready(function () {
         return false;
     }
 
+    //load next Video if the split is reached
     function getNextVideo() {
 
         video.pause();
+
+        //remove the line after the split
         currentVideo.removeSplitPolyline();
+
+        //replace currentVideo with new one, up the current index in the path
         currentIndex++;
-        console.log("currentindex:" + currentIndex + "videoPath:" + videoPath);
         videoPath[currentIndex].positionMarker = currentVideo.positionMarker;
-        //currentVideo.removePositionMarker();
         currentVideo = videoPath[currentIndex];
+
+        //show the video at the time where the intersection is
         var time = currentVideo.getSecondsforPoint(currentVideo.intersectionMarker.position);
-        console.log("time is:" + time);
         showVideoAtTime(currentVideo.id, time);
 
+        //remove the intersections from the old path
         removeOldIntersections();
+
+        //get the intersections for the new video in the path
         getIntersectionVideos(currentVideo);
+
+        //redraw the path
         drawVideoPath();
     }
 
+    //removes intersections from all videos before the current one in the path
+    //in case they were left ofer (they were)
     function removeOldIntersections() {
 
         for (var i = 0; i < videoPath.length; i++) {
@@ -386,22 +433,33 @@ var Video = function (id, lat, lng) {
 
     var self = this;
     this.id = id;
+    //the position of the video in the map
     this.position = new google.maps.LatLng(lat, lng);
     this.marker = null;
+    //the trajectory from the database
     this.trajectory = null;
+    //the main polyline from the path
     this.polyline = null;
     this.positionMarker = null;
 
+    //the polyline if the video is an intersection
     this.intersectionPolyline = null;
+    //the marker where the intersection starts
     this.intersectionMarker = null;
+    //the time where the intersection is at the currentVideo
     this.intersectionTime = null;
 
+    //where the video is cut off so that in can go into an intersection
     this.splitPoint = null;
+    //the polyline after the split
     this.splitPolyline = null;
+    //the time at which the video is split
     this.splitTime = null;
 
+    //the list of the video's intersection
     this.intersectionVideos = [];
 
+    //the depth/index of the video in the videoPath
     var videoPathDepth = 0;
 
     this.drawMarker = function (map) {
@@ -432,7 +490,7 @@ var Video = function (id, lat, lng) {
         }
     };
 
-
+    //hand callback to the marker's evenListener
     this.onMarkerClick = function (callback) {
         if (self.marker == null) {
             self.drawMarker(null);
@@ -446,6 +504,7 @@ var Video = function (id, lat, lng) {
         self.trajectory = trajectory;
     };
     /*
+     //old drawpath implementation
      this.drawPath = function (map) {
      if (self.trajectory == null) {
      loadTrajectory(self.drawPath, map);
@@ -478,18 +537,23 @@ var Video = function (id, lat, lng) {
      }; */
 
     this.drawPath = function (map) {
+        // if there is no trajectory yet, request one from the server
         if (self.trajectory == null) {
             loadTrajectory(self.drawPath, map);
             return;
         }
 
+        //remove old Paths
         self.removePath();
         self.removeIntersectionPolyline();
 
+        //list of points for building the polyine
         var waypoints = [];
+        //list of points for building the polyline after the split
         var splitpoints = [];
         var isbeforeSplit = true;
 
+        //check if the video has previously been another video's intersection in the videoPath
         var afterIntersection = true
         if (self.intersectionMarker != null)
             afterIntersection = false;
@@ -507,11 +571,15 @@ var Video = function (id, lat, lng) {
                     path: [latLng1, latLng2]
                 });
 
+                //if the video has been an intersection and you haven't reached the intersectionpoint yet, continue
                 if (!afterIntersection && !google.maps.geometry.poly.containsLocation(self.intersectionMarker.position, polyline))
                     continue;
 
+                //it has reached the intersection point to continue
                 afterIntersection = true;
 
+                //if the video is split, check if the splitpoint is reached
+                //if yes, split the video here
                 if (self.splitPoint != null && google.maps.geometry.poly.containsLocation(self.splitPoint, polyline)) {
                     isbeforeSplit = false;
                     waypoints.push(self.splitPoint);
@@ -553,6 +621,7 @@ var Video = function (id, lat, lng) {
         }
     };
 
+    //remove the path components
     this.removePath = function () {
         if (self.polyline != null) {
             self.polyline.setMap(null);
@@ -564,6 +633,7 @@ var Video = function (id, lat, lng) {
         }
     };
 
+    //load Trajectories from the backend
     function loadTrajectory(callback, args) {
         var pathUrl = url + "/videopath?videoID=" + self.id;
 
@@ -590,6 +660,7 @@ var Video = function (id, lat, lng) {
         });
     };
 
+    //check if video is at splitpoint at seconds
     this.isAtSplitPoint = function (seconds) {
         if (self.splitPoint == null || self.splitPoint == undefined)
             return false;
@@ -621,6 +692,7 @@ var Video = function (id, lat, lng) {
         }
     };
 
+    //get where the video trajectory is at for the current time
     function getPointForSecond(second) {
         for (var i = 0; i < self.trajectory.length; i++) {
             var point = self.trajectory[i];
@@ -632,6 +704,7 @@ var Video = function (id, lat, lng) {
         return self.trajectory[self.trajectory.length - 1];
     }
 
+    //get where the video time is for a certain point
     this.getSecondsforPoint = function (latLng) {
 
         var i = 0;
@@ -650,16 +723,21 @@ var Video = function (id, lat, lng) {
         return self.trajectory[i][2]-1;
     };
 
+    //draw the intersection
     this.drawIntersectionRoute = function (intersectionPoint, map) {
+        //return if already drawn
         if (self.intersectionPolyline != null)
             return;
+        //points for bulding the polyline
         var routePoints = [];
+        //bool for checking if the polyline is after the intersection marker
         var isAfterIntersection = false;
         var latlng = new google.maps.LatLng(intersectionPoint.lat, intersectionPoint.lng);
 
         for (var j = 0; j < self.trajectory.length; j++) {
 
             var a = self.trajectory[j];
+            //if you haven't reached the intersecton point yet, check
             if (!isAfterIntersection) {
                 if (j == self.trajectory.length - 1)
                     continue;
@@ -671,16 +749,19 @@ var Video = function (id, lat, lng) {
                 var polyline = new google.maps.Polyline({
                     path: [latLng1, latLng2]
                 });
+                //check if current part of the trajectory intersects with the intersection point
                 if (!google.maps.geometry.poly.containsLocation(latlng, polyline))
                     continue;
-
+                //if it does, finally start pushing points
                 isAfterIntersection = true;
             }
             routePoints.push(new google.maps.LatLng(a[1], a[0]));
         }
-
+        //first point of the polyline always is the intersection point so it starts nicely at the marker
         routePoints[0] = latlng;
 
+        //if marker exists, clear it fist
+        //is the case if video was another video's intersection I think
         if (self.intersectionMarker != null) {
             self.intersectionMarker.setMap(null);
             self.intersectionMarker = null;
@@ -708,6 +789,7 @@ var Video = function (id, lat, lng) {
         });
     };
 
+    //give intersection marker & intersection polyline the callback when they are clicked
     this.onIntersectionClick = function (callback) {
         google.maps.event.addListener(self.intersectionMarker, "click", function () {
             callback(self);
