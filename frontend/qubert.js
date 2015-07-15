@@ -23,101 +23,7 @@ $(document).ready(function () {
             //mapTypeId: google.maps.MapTypeId.SATELLITE,
             heading: 10,
             tilt: 45,
-            styles: [
-                {
-                    "featureType": "landscape.natural",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "color": "#e0efef"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "poi",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "color": "#45b29d"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "road",
-                    "elementType": "geometry",
-                    "stylers": [
-                        {
-                            "lightness": 100
-                        },
-                        {
-                            "visibility": "simplified"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "road",
-                    "elementType": "labels",
-                    "stylers": [
-                        {
-                            "visibility": "off"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "transit.line",
-                    "elementType": "geometry",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "lightness": 700
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "all",
-                    "stylers": [
-                        {
-                            "color": "#7dcdcd"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "color": "#334d5c"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "labels.text.fill",
-                    "stylers": [
-                        {
-                            "color": "#ffffff"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "labels.text.stroke",
-                    "stylers": [
-                        {
-                            "color": "#334d5c"
-                        }
-                    ]
-                }
-            ]
+            styles: mapStyles.QUBERT
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
@@ -319,7 +225,7 @@ $(document).ready(function () {
     function getURLfromBounds() {
         var bounds = map.getBounds();
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
-            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng();
+            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + 100;
     }
 
 
@@ -441,7 +347,7 @@ $(document).ready(function () {
     }
 
     function getURLforIntersections(id) {
-        return url + "/intersections?videoID=" + id;
+        return url + "/intersections?videoID=" + id + "&minDistance=" + 100;
     }
 
 });
