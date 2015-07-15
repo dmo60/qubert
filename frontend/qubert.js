@@ -14,6 +14,11 @@ $(document).ready(function () {
 
     var videoPlayer = 0;
 
+    var isPlaying = false;
+    var minDistance = 0;
+
+    var spinner;
+
     google.maps.event.addDomListener(window, 'load', initialize);
 
     function initialize() {
@@ -28,6 +33,21 @@ $(document).ready(function () {
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
         google.maps.event.addListener(map, "click", onMapClicked);
+
+
+        spinner = $("#spinner").spinner({min: 0, max: 2000});
+
+        $("#setMinDist").click(function () {
+            if (!isPlaying) {
+                minDistance = spinner.spinner("value");
+                console.log(minDistance);
+                for (var i = 0; i < videos.length; i++) {
+                    videos[i].removeMarker();
+                }
+                videos = [];
+                requestVideos();
+            }
+        })
     }
 
     function rotateHeading(deg) {
@@ -57,7 +77,7 @@ $(document).ready(function () {
     }
 
     function videoMarkerClicked(video) {
-
+        isPlaying = true;
         currentVideo = video;
         videoPath = [];
         currentIndex = 0;
@@ -75,6 +95,7 @@ $(document).ready(function () {
     }
 
     function onMapClicked() {
+        isPlaying = false;
 
         if (currentVideo != null) {
 
@@ -96,9 +117,9 @@ $(document).ready(function () {
             videoPath = [];
             showAllVideos();
 
-            $("#overlay").animate({
-                width: "0%"
-            }, 250);
+            //$("#overlay").animate({
+            //    width: "0%"
+            //}, 250);
 
         }
 
@@ -223,8 +244,13 @@ $(document).ready(function () {
 
     function getURLfromBounds() {
         var bounds = map.getBounds();
+        var ret = url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
+            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + minDistance;
+
+        console.log(ret);
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
-            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + 100;
+            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + minDistance;
+
     }
 
 
@@ -346,7 +372,7 @@ $(document).ready(function () {
     }
 
     function getURLforIntersections(id) {
-        return url + "/intersections?videoID=" + id + "&minDistance=" + 100;
+        return url + "/intersections?videoID=" + id + "&minDistance=" + minDistance;
     }
 
 });
