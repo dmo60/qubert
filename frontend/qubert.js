@@ -1,4 +1,5 @@
 var url = "http://127.0.0.1:8080";
+var style = styles.QUBERT;
 
 $(document).ready(function () {
     var map;
@@ -28,7 +29,7 @@ $(document).ready(function () {
             //mapTypeId: google.maps.MapTypeId.SATELLITE,
             heading: 10,
             tilt: 45,
-            styles: mapStyles.DEFAULT
+            styles: style.map
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
@@ -36,7 +37,7 @@ $(document).ready(function () {
 
 
         spinner = $("#spinner").spinner({min: 0});
-        $( "#spinner" ).on( "spin", function( event, ui ) {
+        spinner.on( "spin", function( event, ui ) {
             filterVideos();
 
         } );
@@ -420,7 +421,7 @@ var Video = function (id, lat, lng) {
         }
 
         self.marker = new google.maps.Marker({
-            icon: 'img/icon_video.png',
+            icon: style.videoIcon,
             position: self.position,
             map: map
         });
@@ -597,7 +598,7 @@ var Video = function (id, lat, lng) {
 
             optimized:false,
             draggable:false,
-            icon: "img/player.gif",
+            icon: style.positionIcon,
             position: self.position,
             map: map
         });
@@ -700,7 +701,7 @@ var Video = function (id, lat, lng) {
         }
 
         var markerimage = {
-            url: "img/icon_intersection.png",
+            url: style.intersectionIcon,
             size: new google.maps.Size(22, 22),
             origin: new google.maps.Point(0, 0),
             anchor: new google.maps.Point(11, 11)
