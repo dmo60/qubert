@@ -41,7 +41,6 @@ $(document).ready(function () {
     function requestVideos() {
         $.get(getURLfromBounds(), function (data) {
             $.each(data, function () {
-                //TODO: delete markers out of bounds
 
                 if (getVideoForId(this.id)) {
                     return true;
@@ -72,26 +71,27 @@ $(document).ready(function () {
         hideUnselectedVideos();
 
         updateCenter(video.position);
-        showVideoAtTime(currentVideo.id,0);
+        showVideoAtTime(currentVideo.id, 0);
     }
 
     function onMapClicked() {
 
-        videoPath.forEach(function (vid) {
-            vid.removePath();
-            vid.removePositionMarker();
-            vid.removeSplitPoint();
-            vid.removeIntersectionRoute();
-            vid.intersectionVideos.forEach(function (video) {
-                video.removeIntersectionRoute();
-                video.removePath();
-            });
-            vid.intersectionVideos = [];
-        });
-
         if (currentVideo != null) {
 
             video.pause();
+
+            videoPath.forEach(function (vid) {
+                vid.removePath();
+                vid.removePositionMarker();
+                vid.removeSplitPoint();
+                vid.removeIntersectionRoute();
+                vid.intersectionVideos.forEach(function (video) {
+                    video.removeIntersectionRoute();
+                    video.removePath();
+                });
+                vid.intersectionVideos = [];
+            });
+
             currentVideo = null;
             videoPath = [];
             showAllVideos();
@@ -101,7 +101,6 @@ $(document).ready(function () {
             }, 250);
 
         }
-
 
 
     }
@@ -126,13 +125,13 @@ $(document).ready(function () {
 
     function getIntersectionVideos(vid) {
         var id = vid.id;
-        var onIntersectionVideo = vid.intersectionMarker!=null;
+        var onIntersectionVideo = vid.intersectionMarker != null;
         var polylineGeoJson = null;
 
-        if(onIntersectionVideo) {
-            polylineGeoJson = { "type": "LineString", "coordinates": [] };
+        if (onIntersectionVideo) {
+            polylineGeoJson = {"type": "LineString", "coordinates": []};
             vid.polyline.getPath().forEach(function (latlng) {
-                polylineGeoJson.coordinates.push([latlng.lng(),latlng.lat()]);
+                polylineGeoJson.coordinates.push([latlng.lng(), latlng.lat()]);
             });
         }
 
@@ -143,9 +142,9 @@ $(document).ready(function () {
 
                 var curr = data.videos[i];
 
-                if(onIntersectionVideo) {
-                    console.log("lineintersects: "+lineStringsIntersect(curr.trajectory,polylineGeoJson));
-                    if(!lineStringsIntersect(curr.trajectory,polylineGeoJson))
+                if (onIntersectionVideo) {
+                    console.log("lineintersects: " + lineStringsIntersect(curr.trajectory, polylineGeoJson));
+                    if (!lineStringsIntersect(curr.trajectory, polylineGeoJson))
                         continue;
                 }
 
@@ -189,7 +188,7 @@ $(document).ready(function () {
         }
         videoPath.push(video);
         video.videoPathDepth = currentIndex + 1;
-        console.log("Video added to path. currentIndex:"+currentIndex);
+        console.log("Video added to path. currentIndex:" + currentIndex);
     }
 
     function drawVideoPath() {
@@ -244,17 +243,18 @@ $(document).ready(function () {
         video = $(newVideoID)[0];
 
         newVideo.src = getVideoUrl(id);
-        newVideo.style.display="block";
+        newVideo.style.display = "block";
 
         newVideo.addEventListener("loadeddata", function () {
 
-            if(time!=undefined){
-                $(newVideoID)[0].currentTime = time;}
+            if (time != undefined) {
+                $(newVideoID)[0].currentTime = time;
+            }
             $(oldvideoID).animate({
                 opacity: 0
             }, 500, function () {
                 oldVideo.pause();
-                oldVideo.style.display="none";
+                oldVideo.style.display = "none";
 
             });
             $(oldvideoID).off("play");
@@ -276,13 +276,12 @@ $(document).ready(function () {
     }
 
 
-
     function onVideoProgress() {
         if (video.paused || video.ended) {
             return;
         }
         currentVideo.updatePositionMarker(Math.round(video.currentTime));
-        if (currentVideo.splitTime!=null&&Math.round(video.currentTime)>currentVideo.splitTime) {
+        if (currentVideo.splitTime != null && Math.round(video.currentTime) > currentVideo.splitTime) {
             getNextVideo();
             return;
         }
@@ -295,7 +294,7 @@ $(document).ready(function () {
         removeOtherSelectionFromPath();
         addToVideoPath(video);
         drawVideoPath();
-        console.log("clicked Intersection " + video.id +"currentIndex"+currentIndex);
+        console.log("clicked Intersection " + video.id + "currentIndex" + currentIndex);
     }
 
     function isInVideoPath(video) {
@@ -314,7 +313,7 @@ $(document).ready(function () {
         video.pause();
         currentVideo.removeSplitPolyline();
         currentIndex++;
-        console.log("currentindex:"+currentIndex+"videoPath:"+videoPath);
+        console.log("currentindex:" + currentIndex + "videoPath:" + videoPath);
         videoPath[currentIndex].positionMarker = currentVideo.positionMarker;
         //currentVideo.removePositionMarker();
         currentVideo = videoPath[currentIndex];
@@ -333,8 +332,8 @@ $(document).ready(function () {
             var curr = videoPath[i];
             if (curr.videoPathDepth < currentIndex) {
                 curr.intersectionVideos.forEach(function (video) {
-                    if(video.id!=currentVideo.id)
-                    video.removeIntersectionRoute();
+                    if (video.id != currentVideo.id)
+                        video.removeIntersectionRoute();
                 });
                 curr.intersectionVideos = [];
             }
@@ -365,11 +364,11 @@ var Video = function (id, lat, lng) {
 
     this.intersectionPolyline = null;
     this.intersectionMarker = null;
-    this.intersectionTime=null;
+    this.intersectionTime = null;
 
     this.splitPoint = null;
     this.splitPolyline = null;
-    this.splitTime=null;
+    this.splitTime = null;
 
     this.intersectionVideos = [];
 
