@@ -8,6 +8,7 @@ var config = require("./config");
 exports.RequestHandler = function (req, res) {
 
     var queryVideoId = req.query.videoID;
+    var minDistance = parseInt(req.query.minDistance);
 
     async.waterfall([
         function (callback) {
@@ -33,6 +34,7 @@ exports.RequestHandler = function (req, res) {
         function (queryTrajectory, mongoDb, callback) {
             mongoDb.collection("videos").find({
                 VideoId: {$ne: queryVideoId},
+                distance: {$gte: minDistance},
                 trajectory: {
                     $geoIntersects: {
                         $geometry: queryTrajectory
