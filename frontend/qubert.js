@@ -248,7 +248,11 @@ $(document).ready(function () {
                         lat: video.intersectionPoint[0],
                         lng: video.intersectionPoint[1]
                     }, map);
+
+                    //set the time at which the current Video reaches this intersection
                     video.intersectionTime=currentVideo.getSecondsforPoint(video.intersectionMarker.position);
+
+                    //add intersection click eventlistener callback
                     video.onIntersectionClick(intersectionClicked);
                 });
                 //only draw the line after the split for the current video
