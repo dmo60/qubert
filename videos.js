@@ -11,6 +11,7 @@ var LatLng = function (coords) {
 exports.RequestHandler = function (req, res) {
     var leftTop = new LatLng(req.query.leftTop);
     var rightBottom = new LatLng(req.query.rightBottom);
+    var minDistance = parseInt(req.query.minDistance);
 
     async.waterfall([
         function(callback) {
@@ -20,7 +21,8 @@ exports.RequestHandler = function (req, res) {
         function (db, callback) {
             var videos = db.collection("videos");
             videos.find({
-                "location": {
+                distance: {$gte: minDistance},
+                location: {
                     $geoWithin: {
                         $box: [[leftTop.lng, rightBottom.lat], [rightBottom.lng, leftTop.lat]]
                     }
