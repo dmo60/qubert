@@ -166,7 +166,7 @@ $(document).ready(function () {
         hideUnselectedVideos();
 
         updateCenter(video.position);
-        showVideoAtTime(currentVideo.id);
+        showVideoAtTime(currentVideo.id,0);
     }
 
     function onMapClicked() {
