@@ -6,7 +6,7 @@ var fs      = require('fs');
 var mongoExpress = require('./node_modules/mongo-express/middleware');
 var config = require('./config');
 
-var test = require('./test');
+var init = require('./init');
 var videos = require('./videos');
 var videopath = require('./videopath');
 var intersections = require('./intersections');
@@ -110,7 +110,7 @@ var SampleApp = function() {
         };
         */
 
-        self.routes['/test'] = test.RequestHandler;
+        self.routes['/mongo/init'] = init.RequestHandler;
         self.routes['/videos'] = videos.RequestHandler;
         self.routes['/videopath'] = videopath.RequestHandler;
         self.routes['/intersections'] = intersections.RequestHandler;
