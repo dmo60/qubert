@@ -4,6 +4,7 @@ var MongoClient = require("mongodb").MongoClient
     , config = require("./config")
     , geoJson = require("./geoJson")
     , hull = require("hull.js")
+    , gju = require("geojson-utils")
     , Victor = require("victor");
 
 exports.initialize = function (cb) {
@@ -23,12 +24,14 @@ exports.initialize = function (cb) {
         function (callback) {
             buildTrajectories(callback);
         },
+        /*
         function (callback) {
             buildViewCones(callback);
         },
         function (callback) {
             buildHulls(callback);
         },
+        */
         function (callback) {
             disconnect(callback);
         }
@@ -143,7 +146,7 @@ exports.initialize = function (cb) {
             function (videos, callback) {
                 console.log("Loading trajectories for videos...");
                 var logForVideo = ""; //leave empty if no log desired
-                var minimumWaypoints = 20;
+                var minimumWaypoints = 2;
                 var maxArtificialWaypoints = 5;
                 var videosToDelete = [];
 
@@ -406,6 +409,18 @@ exports.initialize = function (cb) {
                             //videos.remove(video.id);
 
                             video.trajectory = new geoJson.LineString(wayPoints);
+
+                            var distance = 0;
+                            var lastPoint = {lat: video.trajectory.coordinates[0][1],
+                                             lng: video.trajectory.coordinates[0][0]};
+                            for (var j = 1; j < video.trajectory.coordinates.length; j++) {
+                                var currPoint = {lat: video.trajectory.coordinates[j][1],
+                                                 lng: video.trajectory.coordinates[j][0]};
+                                distance += distanceTo(lastPoint, currPoint);
+                                lastPoint = currPoint;
+                            }
+                            video.distance = Math.round(distance);
+
                             callback(null);
                         }
                     });
@@ -625,4 +640,8 @@ function toRad(deg) {
 
 function toDeg(rad) {
     return rad * 180 / Math.PI;
+}
+
+function distanceTo(p1, p2) {
+    return gju.pointDistance(new geoJson.Point(p1.lat, p1.lng), new geoJson.Point(p2.lat, p2.lng));
 }

@@ -14,6 +14,11 @@ $(document).ready(function () {
 
     var videoPlayer = 0;
 
+    var isPlaying = false;
+    var minDistance = 0;
+
+    var spinner;
+
     google.maps.event.addDomListener(window, 'load', initialize);
 
     function initialize() {
@@ -23,105 +28,26 @@ $(document).ready(function () {
             //mapTypeId: google.maps.MapTypeId.SATELLITE,
             heading: 10,
             tilt: 45,
-            styles: [
-                {
-                    "featureType": "landscape.natural",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "color": "#e0efef"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "poi",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "color": "#45b29d"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "road",
-                    "elementType": "geometry",
-                    "stylers": [
-                        {
-                            "lightness": 100
-                        },
-                        {
-                            "visibility": "simplified"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "road",
-                    "elementType": "labels",
-                    "stylers": [
-                        {
-                            "visibility": "off"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "transit.line",
-                    "elementType": "geometry",
-                    "stylers": [
-                        {
-                            "visibility": "on"
-                        },
-                        {
-                            "lightness": 700
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "all",
-                    "stylers": [
-                        {
-                            "color": "#7dcdcd"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "geometry.fill",
-                    "stylers": [
-                        {
-                            "color": "#334d5c"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "labels.text.fill",
-                    "stylers": [
-                        {
-                            "color": "#ffffff"
-                        }
-                    ]
-                },
-                {
-                    "featureType": "water",
-                    "elementType": "labels.text.stroke",
-                    "stylers": [
-                        {
-                            "color": "#334d5c"
-                        }
-                    ]
-                }
-            ]
+            styles: mapStyles.QUBERT
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         google.maps.event.addListener(map, "idle", requestVideos);
         google.maps.event.addListener(map, "click", onMapClicked);
+
+
+        spinner = $("#spinner").spinner({min: 0, max: 2000});
+
+        $("#setMinDist").click(function () {
+            if (!isPlaying) {
+                minDistance = spinner.spinner("value");
+                console.log(minDistance);
+                for (var i = 0; i < videos.length; i++) {
+                    videos[i].removeMarker();
+                }
+                videos = [];
+                requestVideos();
+            }
+        })
     }
 
     function rotateHeading(deg) {
@@ -152,7 +78,7 @@ $(document).ready(function () {
     }
 
     function videoMarkerClicked(video) {
-
+        isPlaying = true;
         currentVideo = video;
         videoPath = [];
         currentIndex = 0;
@@ -166,11 +92,11 @@ $(document).ready(function () {
         hideUnselectedVideos();
 
         updateCenter(video.position);
-        showVideoAtTime(currentVideo.id,0);
+        showVideoAtTime(currentVideo.id, 0);
     }
 
     function onMapClicked() {
-
+        isPlaying = false;
         videoPath.forEach(function (vid) {
             vid.removePath();
             vid.removePositionMarker();
@@ -190,12 +116,11 @@ $(document).ready(function () {
             videoPath = [];
             showAllVideos();
 
-            $("#overlay").animate({
-                width: "0%"
-            }, 250);
+            //$("#overlay").animate({
+            //    width: "0%"
+            //}, 250);
 
         }
-
 
 
     }
@@ -220,13 +145,13 @@ $(document).ready(function () {
 
     function getIntersectionVideos(vid) {
         var id = vid.id;
-        var onIntersectionVideo = vid.intersectionMarker!=null;
+        var onIntersectionVideo = vid.intersectionMarker != null;
         var polylineGeoJson = null;
 
-        if(onIntersectionVideo) {
-            polylineGeoJson = { "type": "LineString", "coordinates": [] };
+        if (onIntersectionVideo) {
+            polylineGeoJson = {"type": "LineString", "coordinates": []};
             vid.polyline.getPath().forEach(function (latlng) {
-                polylineGeoJson.coordinates.push([latlng.lng(),latlng.lat()]);
+                polylineGeoJson.coordinates.push([latlng.lng(), latlng.lat()]);
             });
         }
 
@@ -237,9 +162,9 @@ $(document).ready(function () {
 
                 var curr = data.videos[i];
 
-                if(onIntersectionVideo) {
-                    console.log("lineintersects: "+lineStringsIntersect(curr.trajectory,polylineGeoJson));
-                    if(!lineStringsIntersect(curr.trajectory,polylineGeoJson))
+                if (onIntersectionVideo) {
+                    console.log("lineintersects: " + lineStringsIntersect(curr.trajectory, polylineGeoJson));
+                    if (!lineStringsIntersect(curr.trajectory, polylineGeoJson))
                         continue;
                 }
 
@@ -286,7 +211,7 @@ $(document).ready(function () {
         }
         videoPath.push(video);
         video.videoPathDepth = currentIndex + 1;
-        console.log("Video added to path. currentIndex:"+currentIndex);
+        console.log("Video added to path. currentIndex:" + currentIndex);
     }
 
     function drawVideoPath() {
@@ -322,8 +247,13 @@ $(document).ready(function () {
 
     function getURLfromBounds() {
         var bounds = map.getBounds();
+        var ret = url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
+            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + minDistance;
+
+        console.log(ret);
         return url + "/videos?leftTop=" + bounds.getNorthEast().lat() + "," + bounds.getNorthEast().lng() +
-            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng();
+            "&rightBottom=" + bounds.getSouthWest().lat() + "," + bounds.getSouthWest().lng() + "&minDistance=" + minDistance;
+
     }
 
 
@@ -342,17 +272,18 @@ $(document).ready(function () {
         video = $(newVideoID)[0];
 
         newVideo.src = getVideoUrl(id);
-        newVideo.style.display="block";
+        newVideo.style.display = "block";
 
         newVideo.addEventListener("loadeddata", function () {
 
-            if(time!=undefined){
-                $(newVideoID)[0].currentTime = time;}
+            if (time != undefined) {
+                $(newVideoID)[0].currentTime = time;
+            }
             $(oldvideoID).animate({
                 opacity: 0
             }, 500, function () {
                 oldVideo.pause();
-                oldVideo.style.display="none";
+                oldVideo.style.display = "none";
 
             });
             $(oldvideoID).off("play");
@@ -374,13 +305,12 @@ $(document).ready(function () {
     }
 
 
-
     function onVideoProgress() {
         if (video.paused || video.ended) {
             return;
         }
         currentVideo.updatePositionMarker(Math.round(video.currentTime));
-        if (currentVideo.splitTime!=null&&Math.round(video.currentTime)>currentVideo.splitTime) {
+        if (currentVideo.splitTime != null && Math.round(video.currentTime) > currentVideo.splitTime) {
             getNextVideo();
             return;
         }
@@ -395,7 +325,6 @@ $(document).ready(function () {
         removeOtherSelectionFromPath();
         addToVideoPath(vid);
         drawVideoPath();
-        console.log("clicked Intersection " + vid.id +"splittime:"+currentVideo.splitTime);
     }
 
     function isInVideoPath(video) {
@@ -414,7 +343,7 @@ $(document).ready(function () {
         video.pause();
         currentVideo.removeSplitPolyline();
         currentIndex++;
-        console.log("currentindex:"+currentIndex+"videoPath:"+videoPath);
+        console.log("currentindex:" + currentIndex + "videoPath:" + videoPath);
         videoPath[currentIndex].positionMarker = currentVideo.positionMarker;
         //currentVideo.removePositionMarker();
         currentVideo = videoPath[currentIndex];
@@ -433,8 +362,8 @@ $(document).ready(function () {
             var curr = videoPath[i];
             if (curr.videoPathDepth < currentIndex) {
                 curr.intersectionVideos.forEach(function (video) {
-                    if(video.id!=currentVideo.id)
-                    video.removeIntersectionRoute();
+                    if (video.id != currentVideo.id)
+                        video.removeIntersectionRoute();
                 });
                 curr.intersectionVideos = [];
             }
@@ -447,7 +376,7 @@ $(document).ready(function () {
     }
 
     function getURLforIntersections(id) {
-        return url + "/intersections?videoID=" + id;
+        return url + "/intersections?videoID=" + id + "&minDistance=" + minDistance;
     }
 
 });
@@ -465,11 +394,11 @@ var Video = function (id, lat, lng) {
 
     this.intersectionPolyline = null;
     this.intersectionMarker = null;
-    this.intersectionTime=null;
+    this.intersectionTime = null;
 
     this.splitPoint = null;
     this.splitPolyline = null;
-    this.splitTime=null;
+    this.splitTime = null;
 
     this.intersectionVideos = [];
 
