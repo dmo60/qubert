@@ -208,7 +208,7 @@ $(document).ready(function () {
                     continue;
 
 
-                video.setTrajecotry(curr.trajectory.coordinates);
+                video.setTrajectory(curr.trajectory.coordinates);
                 video.intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
 
                 vid.intersectionVideos.push(video);
@@ -243,7 +243,7 @@ $(document).ready(function () {
         console.log("Video added to path. currentIndex:" + currentIndex);
     }
 
-    //interate through videoPath and draw every video
+    //iterate through videoPath and draw every video
     function drawVideoPath() {
         for (var i = 0; i < videoPath.length; i++) {
             var curr = videoPath[i];
@@ -359,18 +359,29 @@ $(document).ready(function () {
     //an intersection/an intersection marker was clicked
     function intersectionClicked(vid) {
         //only allow click after where the video currently is at
-        if(video.currentTime>vid.intersectionTime)
+        if(video.currentTime > vid.intersectionTime)
             return;
 
         //set the split point for splitting the current Video
-        currentVideo.splitPoint = vid.intersectionMarker.getPosition();
-        currentVideo.splitTime = currentVideo.getSecondsforPoint(currentVideo.splitPoint);
+        var deselect = (currentVideo.splitPoint == vid.intersectionMarker.getPosition());
+        if (!deselect) {
+            currentVideo.splitPoint = vid.intersectionMarker.getPosition();
+            currentVideo.splitTime = currentVideo.getSecondsforPoint(currentVideo.splitPoint);
+        } else {
+            currentVideo.splitPoint = null;
+            currentVideo.splitTime = null;
+
+            console.log("deselect");
+        }
+
 
         //remove other selected Intersections
         removeOtherSelectionFromPath();
 
         //add the intersection to the path
-        addToVideoPath(vid);
+        if (!deselect)
+            addToVideoPath(vid);
+
 
         //draw the new path.
         drawVideoPath();
@@ -463,7 +474,7 @@ var Video = function (id, lat, lng) {
     //the time where the intersection is at the currentVideo
     this.intersectionTime = null;
 
-    //where the video is cut off so that in can go into an intersection
+    //where the video is cut off so that it can go into an intersection
     this.splitPoint = null;
     //the polyline after the split
     this.splitPolyline = null;
@@ -504,7 +515,7 @@ var Video = function (id, lat, lng) {
         }
     };
 
-    //hand callback to the marker's evenListener
+    //hand callback to the marker's eventListener
     this.onMarkerClick = function (callback) {
         if (self.marker == null) {
             self.drawMarker(null);
@@ -514,7 +525,7 @@ var Video = function (id, lat, lng) {
         });
     };
 
-    this.setTrajecotry = function (trajectory) {
+    this.setTrajectory = function (trajectory) {
         self.trajectory = trajectory;
     };
     /*
@@ -792,8 +803,6 @@ var Video = function (id, lat, lng) {
             anchor: new google.maps.Point(11, 11)
         };
 
-
-
         self.intersectionMarker = new google.maps.Marker({
             icon: markerimage,
             position: latlng,
@@ -811,9 +820,11 @@ var Video = function (id, lat, lng) {
 
     //give intersection marker & intersection polyline the callback when they are clicked
     this.onIntersectionClick = function (callback) {
+        google.maps.event.clearListeners(self.intersectionMarker,"click");
         google.maps.event.addListener(self.intersectionMarker, "click", function () {
             callback(self);
         });
+        google.maps.event.clearListeners(self.intersectionPolyline,"click");
         google.maps.event.addListener(self.intersectionPolyline, "click", function () {
             callback(self);
         });
