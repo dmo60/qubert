@@ -187,9 +187,12 @@ $(document).ready(function () {
                 if (isInVideoPath(video))
                     continue;
 
+
                 video.setTrajecotry(curr.trajectory.coordinates);
                 video.intersectionPoint = data.points[i][data.points[i].length - 1].coordinates;
+
                 vid.intersectionVideos.push(video);
+
             }
             drawVideoPath();
         });
@@ -231,6 +234,7 @@ $(document).ready(function () {
                         lat: video.intersectionPoint[0],
                         lng: video.intersectionPoint[1]
                     }, map);
+                    video.intersectionTime=currentVideo.getSecondsforPoint(video.intersectionMarker.position);
                     video.onIntersectionClick(intersectionClicked);
                 });
             } else curr.removeSplitPolyline();
@@ -321,13 +325,14 @@ $(document).ready(function () {
         setTimeout(onVideoProgress, 1000);
     }
 
-    function intersectionClicked(video) {
-        currentVideo.splitPoint = video.intersectionMarker.getPosition();
-        currentVideo.splitTime = video.getSecondsforPoint(currentVideo.splitPoint);
+    function intersectionClicked(vid) {
+        if(video.currentTime>vid.intersectionTime)
+            return;
+        currentVideo.splitPoint = vid.intersectionMarker.getPosition();
+        currentVideo.splitTime = currentVideo.getSecondsforPoint(currentVideo.splitPoint);
         removeOtherSelectionFromPath();
-        addToVideoPath(video);
+        addToVideoPath(vid);
         drawVideoPath();
-        console.log("clicked Intersection " + video.id + "currentIndex" + currentIndex);
     }
 
     function isInVideoPath(video) {
@@ -427,6 +432,7 @@ var Video = function (id, lat, lng) {
     };
 
     this.removeSplitPoint = function () {
+        this.splitTime=null;
         self.splitPoint = null;
         if (this.splitPolyline != null) {
             this.splitPolyline.setMap(null);
@@ -602,7 +608,7 @@ var Video = function (id, lat, lng) {
         var point = getPointForSecond(seconds);
         var nextpoint = getPointForSecond((seconds + 1));
         var latLng1 = new google.maps.LatLng(point[1], point[0]);
-        var latLng2 = new google.maps.LatLng(nextpoint[1], nextpoint[0]);
+        var latLng2 = new google.maps.LatLng(nextpoint[0], nextpoint[1]);
         var polyline = new google.maps.Polyline({
             path: [latLng1, latLng2]
         });
@@ -642,7 +648,7 @@ var Video = function (id, lat, lng) {
 
         var i = 0;
         var found = false;
-        for (; !found && i < self.trajectory.length; i++) {
+        for (; !found && i < self.trajectory.length-1; i++) {
             var point = self.trajectory[i];
             var nextpoint = self.trajectory[i + 1];
             var latLng1 = new google.maps.LatLng(point[1], point[0]);
@@ -653,7 +659,7 @@ var Video = function (id, lat, lng) {
             if (google.maps.geometry.poly.containsLocation(latLng, polyline))
                 found = true;
         }
-        return i;
+        return self.trajectory[i][2]-1;
     };
 
     this.drawIntersectionRoute = function (intersectionPoint, map) {
@@ -741,6 +747,7 @@ var Video = function (id, lat, lng) {
     };
 
     this.removeIntersectionRoute = function () {
+        self.intersectionTime=null;
         if (self.intersectionPolyline != null) {
             self.intersectionPolyline.setMap(null);
             self.intersectionPolyline = null;
