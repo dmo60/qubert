@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <style type="text/css">
-
-
-    </style>
     <script type="text/javascript"
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkjmSvcMqjjrt-eV0pSaIeLhIKjBJgx4&sensor=false&v=3&libraries=geometry">
     </script>
@@ -23,16 +19,22 @@
 <div id="overlay">
     <img src="img/logo.png" id="logo">
 
-    <h3 style="color:#ffffff; text-align: center">You walked: 1000m</h3>
+    <h1 id="name">wander<span class="highlight-color">Q</span></h1>
+
+    <br/>
 
     <div id="contentPlaying" class="container">
-        <video id="video0" controls autoplay></video>
-        <video id="video1" controls autoplay></video>
+        <div>
+            <video id="video0" controls autoplay></video>
+            <video id="video1" controls autoplay></video>
+        </div>
+
+        <h3 style="color:#ffffff; text-align: center">You walked: 1000m</h3>
     </div>
 
     <div id="contentIdle" class="container">
         <p>
-            <label for="spinner">Minimal Path length</label>
+            <label for="spinner">Minimale Pfadlänge:</label><br/>
             <input id="spinner" name="value" value=20>
             <button id="setMinDist">Set</button>
         </p>

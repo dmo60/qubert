@@ -36,18 +36,30 @@ video {
 
 .container {
     width: 100%;
-    height: auto;
+    height: 100%;
     position: relative;
 }
 
 #logo {
     width: 119px;
     height: 136px;
-    display: block;
-    margin: auto;
-    padding: 10px;
+    float: left;
+    padding: 0;
+    margin-right: 10px;
 }
 
 label {
     color: white;
+}
+
+#name {
+    line-height: 136px;
+    padding: 0;
+    margin: 0;
+    color: white;
+}
+
+.highlight-color {
+    color: #DF4A4A;
+    font-size: 130%;
 }
