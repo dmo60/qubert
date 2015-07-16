@@ -150,15 +150,17 @@ Dies tritt auf wenn das mobile Endgerät, mit dem das Video aufgezeichnet wurde 
 Gleichzeitig wird aus allen Abständen, die nicht null sind, ein Durchschnittswert berechnet. Dieser Wert wird bei der anschließenden Suche nach fehlerhaften Koordinaten als Obergrenze für den Abstand zweier Wegpunkte genutzt. Bei dieser Suche wurden zwei Szenarien betrachtet:
 
 - *Die fehlerhaften Daten befinden sich am Anfang des Videos:* <br>
-Dieser Fehler tritt meistens auf, wenn die filmende Person sich zuvor z.B. in einem Gebäude befunden hat. Die Abstände zum jeweils nächsten Wegpunkt werden mit dem zuvor errechneten Durchschnittswert verglichen. Die Anzahl der Abstände, die darüber liegen oder null sind, werden aufsummiert. Sobald ein Abstand (Punkt A nach B) wieder darunter liegt und nicht null ist, wird A als korrekt angesehen. Anschließend werden die Punkte vor A berechnet, indem der Vektor BA entsprechend der Anzahl an falschen Punkten wiederholt an A angehängt wird. Dies ist wichtig, um die Anzahl der Trajectory-Punkte konstant zu halten.<br>Ist die Anzahl der fehlerhaften Punkte am Anfang jedoch sehr hoch, würden dadurch wieder falsche Pfade entstehen. Deswegen werden auf diese Weise nur fünf künstliche Punkte berechnet und anschließend immer der letzte Punkt gespeichert. Abschließend wird dieser auch als Startpunkt des gesamten Videos gesetzt.    
-
-- *Die fehlerhaften Daten befinden sich in der Mitte des Videos:* <br>
+Dieser Fehler tritt meistens auf, wenn die filmende Person sich zuvor z.B. in einem Gebäude befunden hat. Die Abstände zum jeweils nächsten Wegpunkt werden mit dem zuvor errechneten Durchschnittswert verglichen. Die Anzahl der Abstände, die darüber liegen oder null sind, werden aufsummiert. Sobald ein Abstand (Punkt A nach B) wieder darunter liegt und nicht null ist, wird A als korrekt angesehen. Anschließend werden die Punkte vor A berechnet, indem der Vektor BA entsprechend der Anzahl an falschen Punkten wiederholt an A angehängt wird. Dies ist wichtig, um die Anzahl der Trajectory-Punkte konstant zu halten.<br>Ist die Anzahl der fehlerhaften Punkte am Anfang jedoch sehr hoch, würden dadurch wieder falsche Pfade entstehen. Deswegen werden auf diese Weise höchstens fünf künstliche Punkte berechnet. Sollten sich noch mehr fehlerhafte Punkte im Trajectory befinden, werden diese alle mit dem letzten (fünften) berechneten Punkt überschrieben.<br>Abschließend wird der letzte berechnete Punkt als Startpunkt des gesamten Videos festgelegt.
 
 <img src="./md_images/cleanT1.png" />
 <img src="./md_images/cleanT2.png" />
 
+- *Die fehlerhaften Daten befinden sich in der Mitte des Videos:* <br>
+Treten zu hohe Abstände in der Mitte des Videos auf, d.h. nachdem mindestens ein Abstand korrekt war, werden alle fehlerhaften Punkte zwischen zwei korrekten Punkten linear interpoliert. Wieder werden alle Punkte ab dem ersten fehlerhaften gezählt. Anschließend wird der Vektor AB durch diese Anzahl geteilt und die so erhaltenen Punkte ersetzen die fehlerhaften Punkte im Trajectory.
 
-
+<img src="./md_images/cleanT3.png" />
+<img src="./md_images/cleanT4.png" />
+<img src="./md_images/legende.png" />
 
 ### API
 
