@@ -2,7 +2,8 @@ video::-webkit-media-controls-fullscreen-button {
     display: none;
 }
 
-*{font-family: 'Montserrat', sans-serif;}
+*{font-family: 'Montserrat', sans-serif;
+   }
 
 html, body {
     height: 100%;
@@ -13,6 +14,11 @@ html, body {
 #map-canvas {
     height: 100%;
     width: auto;
+}
+
+#description{
+   padding: 5px;
+    color: white;
 }
 
 #overlay {
@@ -62,4 +68,8 @@ label {
 .highlight-color {
     color: #DF4A4A;
     font-size: 130%;
+}
+
+a {
+    color: #DF4A4A;
 }
