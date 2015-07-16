@@ -2,72 +2,7 @@
 <html>
 <head>
     <style type="text/css">
-        video::-webkit-media-controls-fullscreen-button {
-            display: none;
-        }
 
-        #overlay {
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 30%;
-            height: 100%;
-            z-index: 2;
-        }
-
-        #map-canvas {
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 100%;
-            z-index: 1;
-        }
-
-        video {
-            opacity: 1;
-            z-index: 3;
-            height: 94%;
-
-        }
-
-        .container {
-
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 90%;
-            height: 200px;
-            position: relative;
-
-        }
-
-        #video0 {
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: auto;
-            width: 100%;
-
-        }
-
-        #video1 {
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: auto;
-            width: 100%;
-
-        }
-
-        #logo {
-            width: 119px;
-            height: 136px;
-            display: block;
-            margin: auto;
-            padding: 10px;
-
-        }
 
     </style>
     <script type="text/javascript"
@@ -75,7 +10,8 @@
     </script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
-    <link href="css/default.css" type="text/css" rel="stylesheet" id="stylesheet"/>
+    <link href="css/default.css" type="text/css" rel="stylesheet"/>
+    <link href="css/qubert.css" type="text/css" rel="stylesheet" id="stylesheet"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
     <script type="text/javascript" src="http://www.geocodezip.com/scripts/v3_epoly.js"></script>
     <script type="text/javascript" src="geojson.js"></script>
@@ -83,7 +19,6 @@
     <script type="text/javascript" src="qubert.js"></script>
 </head>
 <body>
-<div id="map-canvas"></div>
 <div id="overlay">
     <img src="img/logo.png" id="logo">
 
@@ -96,16 +31,17 @@
 
     <div id="contentIdle" class="container">
         <p>
-            <label for="spinner" style="color: #ffffff">Minimal Path length</label>
+            <label for="spinner">Minimal Path length</label>
             <input id="spinner" name="value" value=20>
             <button id="setMinDist">Set</button>
         </p>
         <p>
             <input id="pacmanToggle" type="checkbox" name="Pacman"/>
-            <label for="pacmanToggle" style="color: #ffffff">Pacman mode</label>
+            <label for="pacmanToggle">Pacman mode</label>
         </p>
     </div>
 
 </div>
+<div id="map-canvas"></div>
 </body>
 </html>

@@ -305,11 +305,6 @@ $(document).ready(function () {
 
     function showVideoAtTime(id, time) {
 
-        $("#overlay").animate({
-            width: "20%"
-        }, 250);
-
-
         var oldvideoID = "#video" + videoPlayer;
         var oldVideo = document.getElementById("video" + videoPlayer);
         videoPlayer = (videoPlayer == 0) ? 1 : 0;
