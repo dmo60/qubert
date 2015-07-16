@@ -24,6 +24,9 @@ $(document).ready(function () {
     var isPlaying;
     var minDistance = 0;
 
+    var previousDistance = 0;
+    var currentDistance = 0;
+
     var spinner;
 
     google.maps.event.addDomListener(window, 'load', initialize);
@@ -267,10 +270,10 @@ $(document).ready(function () {
                     video.drawIntersectionRoute({
                         lat: video.intersectionPoint[0],
                         lng: video.intersectionPoint[1]
-                    }, map,curr);
+                    }, map, curr);
 
                     //itersectionMarker will be set null if the intersection isn't on curr's polyline
-                    if(video.intersectionMarker == null) {
+                    if (video.intersectionMarker == null) {
                         return;
                     }
 
@@ -359,6 +362,7 @@ $(document).ready(function () {
             getNextVideo();
             return;
         }
+        getCurrentDistance();
         setTimeout(onVideoProgress, 1000);
     }
 
@@ -409,6 +413,8 @@ $(document).ready(function () {
     function getNextVideo() {
 
         video.pause();
+
+        addDistanceToPrevious();
 
         //remove the line after the split
         currentVideo.removeSplitPolyline();
@@ -480,7 +486,6 @@ $(document).ready(function () {
             $("#score").show();
 
 
-
         } else {
 
             $("#contentPlaying").hide();
@@ -488,6 +493,32 @@ $(document).ready(function () {
 
             $("#contentIdle").show();
         }
+    }
+
+    function getCurrentDistance() {
+        currentDistance = currentVideo.getPolylineUptoPositionMarker().Distance();
+        updateDistanceOnGUI();
+    }
+
+    function resetDistance() {
+        currentDistance = 0;
+        previousDistance = 0;
+        updateDistanceOnGUI();
+    }
+
+    function updateDistanceOnGUI() {
+        $("#score").text("You walked " + Math.round(previousDistance + currentDistance) + " m");
+    }
+
+    function resetCurrentDistance() {
+        currentDistance = 0;
+        updateDistanceOnGUI();
+    }
+
+    function addDistanceToPrevious() {
+        previousDistance += currentDistance;
+        resetCurrentDistance();
+        updateDistanceOnGUI();
     }
 
 });
@@ -638,15 +669,13 @@ var Video = function (id, lat, lng) {
                 //if the video has been an intersection and you haven't reached the intersectionpoint yet, continue
                 if (!afterIntersection && !google.maps.geometry.poly.containsLocation(self.intersectionMarker.position, polyline))
                     continue;
-                else if (!afterIntersection){
+                else if (!afterIntersection) {
 
                     //it has reached the intersection point to continue
                     afterIntersection = true;
                     waypoints.push(self.intersectionMarker.position);
                     continue;
                 }
-
-
 
 
                 //if the video is split, check if the splitpoint is reached
@@ -782,7 +811,7 @@ var Video = function (id, lat, lng) {
     };
 
     //draw the intersection
-    this.drawIntersectionRoute = function (intersectionPoint, map,parentVideo) {
+    this.drawIntersectionRoute = function (intersectionPoint, map, parentVideo) {
         //return if already drawn
         if (self.intersectionPolyline != null)
             return;
@@ -809,8 +838,8 @@ var Video = function (id, lat, lng) {
         });
 
         //if the intersectionmarker isn't on the current video's polyline, don't continue
-        if(!google.maps.geometry.poly.containsLocation(latlng, parentVideo.polyline)) {
-            self.intersectionMarker=null;
+        if (!google.maps.geometry.poly.containsLocation(latlng, parentVideo.polyline)) {
+            self.intersectionMarker = null;
             return;
         }
 
@@ -882,6 +911,32 @@ var Video = function (id, lat, lng) {
             self.intersectionMarker.setMap(null);
             self.intersectionMarker = null;
         }
+    }
+
+    this.getPolylineUptoPositionMarker = function()
+    {
+        var path = [];
+        var polylinePath = self.polyline.getPath().getArray();
+        console.log(polylinePath);
+        for (var i = 0; i < polylinePath.length; i++) {
+            console.log(polylinePath[i]);
+            var latLng1 = new google.maps.LatLng(polylinePath[i].lat(),polylinePath[i].lng());
+            path.push(latLng1);
+            if (i < polylinePath.length - 1) {
+                var latLng2 = new google.maps.LatLng(polylinePath[i+1].lat(),polylinePath[i+1].lng());
+
+                var polyline = new google.maps.Polyline({
+                    path: [latLng1, latLng2]
+                });
+
+                //if the video has been an intersection and you haven't reached the intersectionpoint yet, continue
+                if (google.maps.geometry.poly.containsLocation(self.positionMarker.position, polyline))
+                    break;
+            }
+        }
+        return new google.maps.Polyline({
+            path: path
+        });
     }
 
 };
