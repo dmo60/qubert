@@ -2,6 +2,8 @@ video::-webkit-media-controls-fullscreen-button {
     display: none;
 }
 
+*{font-family: 'Montserrat', sans-serif;}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -17,7 +19,7 @@ html, body {
     float: right;
     height: 100%;
     width: 25%;
-    background-color: #FFFFFF;
+        background-color:#373736;
     padding: 10px;
 }
 

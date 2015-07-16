@@ -201,8 +201,9 @@ $(document).ready(function () {
                 //check if the new intersection intersects with the old one so that you only draw intersections after the split
                 if (onIntersectionVideo) {
                     console.log("lineintersects: " + lineStringsIntersect(curr.trajectory, polylineGeoJson));
-                    if (!lineStringsIntersect(curr.trajectory, polylineGeoJson))
+                    if (!lineStringsIntersect(curr.trajectory, polylineGeoJson)) {
                         continue;
+                    }
                 }
 
                 var video = getVideoForId(curr.VideoId);
@@ -266,7 +267,12 @@ $(document).ready(function () {
                     video.drawIntersectionRoute({
                         lat: video.intersectionPoint[0],
                         lng: video.intersectionPoint[1]
-                    }, map);
+                    }, map,curr);
+
+                    //itersectionMarker will be set null if the intersection isn't on curr's polyline
+                    if(video.intersectionMarker == null) {
+                        return;
+                    }
 
                     //set the time at which the current Video reaches this intersection
                     video.intersectionTime = currentVideo.getSecondsforPoint(video.intersectionMarker.position);
@@ -469,10 +475,18 @@ $(document).ready(function () {
         isPlaying = playing;
         if (isPlaying) {
             $("#contentIdle").hide();
+
             $("#contentPlaying").show();
+            $("#score").show();
+
+
+
         } else {
-            $("#contentIdle").show();
+
             $("#contentPlaying").hide();
+            $("#score").hide();
+
+            $("#contentIdle").show();
         }
     }
 
@@ -768,7 +782,7 @@ var Video = function (id, lat, lng) {
     };
 
     //draw the intersection
-    this.drawIntersectionRoute = function (intersectionPoint, map) {
+    this.drawIntersectionRoute = function (intersectionPoint, map,parentVideo) {
         //return if already drawn
         if (self.intersectionPolyline != null)
             return;
@@ -777,6 +791,30 @@ var Video = function (id, lat, lng) {
         //bool for checking if the polyline is after the intersection marker
         var isAfterIntersection = false;
         var latlng = new google.maps.LatLng(intersectionPoint.lat, intersectionPoint.lng);
+        //if marker exists, clear it fist
+        //is the case if video was another video's intersection I think
+        if (self.intersectionMarker != null) {
+            self.intersectionMarker.setMap(null);
+            self.intersectionMarker = null;
+        }
+        var markerimage = {
+            url: style.intersectionIcon,
+            size: new google.maps.Size(22, 22),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(11, 11)
+        };
+        self.intersectionMarker = new google.maps.Marker({
+            icon: markerimage,
+            position: latlng,
+        });
+
+        //if the intersectionmarker isn't on the current video's polyline, don't continue
+        if(!google.maps.geometry.poly.containsLocation(latlng, parentVideo.polyline)) {
+            self.intersectionMarker=null;
+            return;
+        }
+
+        self.intersectionMarker.setMap(map);
 
         for (var j = 0; j < self.trajectory.length; j++) {
 
@@ -803,26 +841,6 @@ var Video = function (id, lat, lng) {
         }
         //first point of the polyline always is the intersection point so it starts nicely at the marker
         routePoints[0] = latlng;
-
-        //if marker exists, clear it fist
-        //is the case if video was another video's intersection I think
-        if (self.intersectionMarker != null) {
-            self.intersectionMarker.setMap(null);
-            self.intersectionMarker = null;
-        }
-
-        var markerimage = {
-            url: style.intersectionIcon,
-            size: new google.maps.Size(22, 22),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(11, 11)
-        };
-
-        self.intersectionMarker = new google.maps.Marker({
-            icon: markerimage,
-            position: latlng,
-            map: map
-        });
 
         self.intersectionPolyline = new google.maps.Polyline(style.intersectionPolyline(map, routePoints));
     };
