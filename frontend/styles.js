@@ -1,6 +1,7 @@
 var styles = {
 
     DEFAULT: {
+        styleSheet: "css/default.css",
         videoIcon: "img/icon_video.png",
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo.png",
@@ -36,6 +37,7 @@ var styles = {
     },
 
     QUBERT: {
+        styleSheet: "css/qubert.css",
         videoIcon: "img/icon_video.png",
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo.png",
@@ -165,6 +167,7 @@ var styles = {
     },
 
     PACMAN: {
+        styleSheet: "css/pacman.css",
         videoIcon: "img/icon_video_pacman.png",
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo_pacman.png",

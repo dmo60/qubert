@@ -5,7 +5,7 @@
         video::-webkit-media-controls-fullscreen-button {
             display: none;
         }
-        
+
         #overlay {
             position: absolute;
             right: 0;
@@ -13,9 +13,6 @@
             width: 30%;
             height: 100%;
             z-index: 2;
-
-            background-color: #000000;
-
         }
 
         #map-canvas {
@@ -27,7 +24,7 @@
             z-index: 1;
         }
 
-        video, #canvas {
+        video {
             opacity: 1;
             z-index: 3;
             height: 94%;
@@ -63,30 +60,22 @@
 
         }
 
-        .videoBubble {
-            width: 20px;
-            height: 20px;
-            background-color: red;
-            position: absolute;
-            border-radius: 50%;
-
-        }
-
-        #logo{
+        #logo {
             width: 119px;
             height: 136px;
-            display:block;
-            margin:auto;
+            display: block;
+            margin: auto;
             padding: 10px;
 
         }
+
     </style>
     <script type="text/javascript"
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkjmSvcMqjjrt-eV0pSaIeLhIKjBJgx4">
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkjmSvcMqjjrt-eV0pSaIeLhIKjBJgx4&sensor=false&v=3&libraries=geometry">
     </script>
-    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&v=3&libraries=geometry"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link href="css/default.css" type="text/css" rel="stylesheet" id="stylesheet"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
     <script type="text/javascript" src="http://www.geocodezip.com/scripts/v3_epoly.js"></script>
     <script type="text/javascript" src="geojson.js"></script>
@@ -96,21 +85,25 @@
 <body>
 <div id="map-canvas"></div>
 <div id="overlay">
-    <img src="img/logo.png" id ="logo">
+    <img src="img/logo.png" id="logo">
+
     <h3 style="color:#ffffff; text-align: center">You walked: 1000m</h3>
-    <div class="container">
-        
-        <video id="video0" controls autoplay ></video>
+
+    <div id="contentPlaying" class="container">
+        <video id="video0" controls autoplay></video>
         <video id="video1" controls autoplay></video>
-        <canvas id="canvas"></canvas>
     </div>
 
-    <div class="container">
-
-    <label for="spinner" style="color: #ffffff">Minimal Path length</label>
-
-        <input id="spinner" name="value">
-        <button id="setMinDist">Set</button>
+    <div id="contentIdle" class="container">
+        <p>
+            <label for="spinner" style="color: #ffffff">Minimal Path length</label>
+            <input id="spinner" name="value" value=20>
+            <button id="setMinDist">Set</button>
+        </p>
+        <p>
+            <input id="pacmanToggle" type="checkbox" name="Pacman"/>
+            <label for="pacmanToggle" style="color: #ffffff">Pacman mode</label>
+        </p>
     </div>
 
 </div>
