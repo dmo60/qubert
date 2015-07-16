@@ -137,15 +137,13 @@ Auf den Attributen `location` und `trajectory` müssen Anfragen effizient durchf
 
 ### Outlier Detection / Trajectory Smoothing
 
-blablabla (Carl)
-
 Zur Fehlerbehebung werden zunächst die Abstände zwischen allen Punkten in einem Trajectory berechnet. Dabei zeigten sich zwei "Hauptfehler:
 
 - *Der Abstand ist null:* <br>
 Dieser Fehler tritt auf, wenn dem Endgerät keine GPS-Daten vorlagen und stattdessen die Position der Funkzelle gespeichert wurde. 
  
 - *Der Abstand ist unverhältnismäßig groß:* <br> 
-Dies tritt auf wenn das mobile Endgerät, mit dem das Video aufgezeichnet wurde keine korrekten GPS-Daten mehr bzw. wieder korrekte GPS-Daten empfangen hat. Die meisten dieser Fehler treten einzeln auf, d.h. im Koordinaten-Array ist ein einzelner fehlerhafter Punkt ist von zwei korrekten Punkten umgeben. 
+Dies tritt auf wenn das mobile Endgerät, mit dem das Video aufgezeichnet wurde keine korrekten GPS-Daten mehr bzw. wieder korrekte GPS-Daten empfangen hat. Die meisten dieser Fehler treten einzeln auf, d.h. im Koordinaten-Array ist ein einzelner fehlerhafter Punkt ist von zwei korrekten Punkten umgeben.
 
 Gleichzeitig wird aus allen Abständen, die nicht null sind, ein Durchschnittswert berechnet. Dieser Wert wird bei der anschließenden Suche nach fehlerhaften Koordinaten als Obergrenze für den Abstand zweier Wegpunkte genutzt. Bei dieser Suche wurden zwei Szenarien betrachtet:
 
