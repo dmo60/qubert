@@ -38,7 +38,7 @@ var styles = {
                 path: waypoints,
                 strokeWeight: 3,
                 strokeColor: "#FFFFFF",
-                strokeOpacity: 0.1,
+                strokeOpacity: 0.2,
                 map: map
             }
         },
@@ -83,7 +83,7 @@ var styles = {
                 path: waypoints,
                 strokeWeight: 3,
                 strokeColor: "#FFFFFF",
-                strokeOpacity: 0.5,
+                strokeOpacity: 0.2,
                 map: map
             }
         },
@@ -231,7 +231,7 @@ var styles = {
                 path: waypoints,
                 strokeWeight: 3,
                 strokeColor: "#FFFFFF",
-                strokeOpacity: 0.5,
+                strokeOpacity: 0.2,
                 map: map
             }
         },
