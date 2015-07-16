@@ -77,8 +77,24 @@ $(document).ready(function () {
     }
 
     function setGlobalVideoCursor(latLng) {
-        globalVideoCursor = new google.maps.Marker({
+        if (isPacMan) {
+            var image = {
+                icon: style.positionIcon,
+                optimized: false,
+                size: new google.maps.Size(25, 25),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(12.5, 12.5)
+            };
+        } else {
+            var image = {
+                icon: style.positionIcon,
+                optimized: false,
+                size: new google.maps.Size(25, 25)
+            };
+        }
 
+        globalVideoCursor = new google.maps.Marker({
+            icon: image,
             optimized: false,
             draggable: false,
             icon: style.positionIcon,
@@ -88,8 +104,14 @@ $(document).ready(function () {
     }
 
     function updateGlobalVideoCursor() {
+
         if (globalVideoCursor == null) {
             console.error("Cannot update position marker: is null!");
+            return;
+        }
+
+        if(currentVideo.trajectory==null) {
+            globalVideoCursor.setPosition(currentVideo.position);
             return;
         }
 
@@ -143,6 +165,7 @@ $(document).ready(function () {
             });
         });
     }
+
 
     //clicked on a video marker (so that the video starts)
     function videoMarkerClicked(video) {
@@ -548,8 +571,11 @@ $(document).ready(function () {
     }
 
     function getCurrentDistance(map) {
-        currentDistance = currentVideo.getPolylineUptoPositionMarker(map).Distance();
-        updateDistanceOnGUI();
+        var polyline = currentVideo.getPolylineUptoPositionMarker();
+        if(polyline!=null) {
+            currentDistance = polyline.Distance();
+            updateDistanceOnGUI();
+        }
     }
 
     function resetDistance() {
@@ -771,6 +797,10 @@ var Video = function (id, lat, lng) {
         }
     };
 
+    this.loadTrajectory = function(callback,args) {
+        loadTrajectory(callback,args);
+    }
+
     //load Trajectories from the backend
     function loadTrajectory(callback, args) {
         var pathUrl = url + "/videopath?videoID=" + self.id;
@@ -979,6 +1009,9 @@ var Video = function (id, lat, lng) {
             self.drawPath();
             afterpath = [];
         }
+
+        if(self.polyline==null)
+        return null;
 
         var isafter = false;
         var polylinePath = self.polyline.getPath().getArray();
