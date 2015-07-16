@@ -2,4 +2,12 @@
     background-color: #000000;
 }
 
-*{font-family: 'Montserrat', sans-serif;}
+
+.highlight-color {
+    color: #dfb918;
+    font-size: 130%;
+}
+
+a {
+    color: #dfb918;
+}
