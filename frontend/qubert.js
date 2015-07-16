@@ -469,10 +469,18 @@ $(document).ready(function () {
         isPlaying = playing;
         if (isPlaying) {
             $("#contentIdle").hide();
+
             $("#contentPlaying").show();
+            $("#score").show();
+
+
+
         } else {
-            $("#contentIdle").show();
+
             $("#contentPlaying").hide();
+            $("#score").hide();
+
+            $("#contentIdle").show();
         }
     }
 
