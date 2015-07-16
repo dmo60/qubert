@@ -137,7 +137,7 @@ Auf den Attributen `location` und `trajectory` müssen Anfragen effizient durchf
 
 ### Outlier Detection / Trajectory Smoothing
 
-Zur Fehlerbehebung werden zunächst die Abstände zwischen allen Punkten in einem Trajectory berechnet. Dabei zeigten sich zwei "Hauptfehler:
+Zur Fehlerbehebung werden zunächst die Abstände zwischen allen Punkten in einem Trajectory berechnet. Dabei zeigten sich hauptsächlich zwei Fehler:
 
 - *Der Abstand ist null:* <br>
 Dieser Fehler tritt auf, wenn dem Endgerät keine GPS-Daten vorlagen und stattdessen die Position der Funkzelle gespeichert wurde. 
