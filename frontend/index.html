@@ -20,7 +20,9 @@
     <img src="img/logo.png" id="logo">
 
     <h1 id="name">wander<span class="highlight-color">Q</span></h1>
+
     <h3 id="score" style="color:#ffffff; text-align: center">You walked: 1000m</h3>
+
 
     <br/>
 
@@ -35,16 +37,26 @@
     </div>
 
     <div id="contentIdle" class="container">
+        <p id ="description">Klicke auf ein Video und versuche dann möglichst weit zu wandern. Bestimme deinen Pfad neu, indem du auf
+            Kreuzungen klickst und
+            neue Wege einschlägst.</p>
+
         <p>
             <label for="spinner">Minimale Pfadlänge:</label><br/>
             <input id="spinner" name="value" value=20>
             <button id="setMinDist">Set</button>
         </p>
         <p>
+
+            <button id="updateDb">Update database</button>
             <input id="pacmanToggle" type="checkbox" name="Pacman"/>
-            <label for="pacmanToggle">Pacman mode</label>
+            <label for="pacmanToggle" style="font-size: xx-small">Pacman mode</label>
         </p>
+        <h3 style="color: #ffffff">Links:</h3>
+        <a href="http://www.google.de">Documentation</a>
     </div>
+
+
 
 </div>
 <div id="map-canvas"></div>
