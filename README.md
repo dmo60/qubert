@@ -1,4 +1,4 @@
-# wanderQ
+<p align="center"><img src="./md_images/logo.png"/></p>
 
 *wanderQ* ist eine Web-Applikation basierend auf Daten des [MediaQ-Projekts](http://mediaq.usc.edu/), einer Plattform zur Sammlung und Aufbereitung von nutzergenerierten, geogetaggten Videos der University of Southern California (USC).
 
