@@ -129,7 +129,7 @@ Die einzelnen Koordinaten der Trajectory beinhalten jeweils alle von MediaQ bere
 
 #### Qualität der Daten
 
-Es wurde festgestellt, dass die von MediaQ bereitgestellten Geo-Daten von so schlechter Qualität sind, dass eine brauchbare Umsetzung der Applikation ohne Weiteres nicht möglich war. Grund waren Ausreißer und Sprünge in den Positionsdaten, vor allem in den ersten Sekunden der Videos, wo oftmals offenbar keine stabile GPS-Verbindung bestand. Um das Problem zu lösen, werden die Trajectories in einem Zwischenschritt geglättet und von den größten Ausreißern befreit. Dieser Teil ist im Abschnitt [Outlier Detection / Trajectory Smoothing]() beschrieben.
+Es wurde festgestellt, dass die von MediaQ bereitgestellten Geo-Daten von so schlechter Qualität sind, dass eine brauchbare Umsetzung der Applikation ohne Weiteres nicht möglich war. Grund waren Ausreißer und Sprünge in den Positionsdaten, vor allem in den ersten Sekunden der Videos, wo oftmals offenbar keine stabile GPS-Verbindung bestand. Um das Problem zu lösen, werden die Trajectories in einem Zwischenschritt geglättet und von den größten Ausreißern befreit. Dieser Teil ist im Abschnitt [Outlier Detection / Trajectory Smoothing](#outlier-detection--trajectory-smoothing) beschrieben.
 
 #### Geo-Indizierung
 
