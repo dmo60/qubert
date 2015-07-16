@@ -33,6 +33,15 @@ var styles = {
                 map: map
             }
         },
+        pacManEatenPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.1,
+                map: map
+            }
+        },
         map: []
     },
 
@@ -61,6 +70,15 @@ var styles = {
             }
         },
         intersectionPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                map: map
+            }
+        },
+        pacManEatenPolyline: function (map, waypoints) {
             return {
                 path: waypoints,
                 strokeWeight: 3,
@@ -200,6 +218,15 @@ var styles = {
             }
         },
         intersectionPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                map: map
+            }
+        },
+        pacManEatenPolyline: function (map, waypoints) {
             return {
                 path: waypoints,
                 strokeWeight: 3,

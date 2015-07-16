@@ -1,6 +1,11 @@
 var url = "http://127.0.0.1:8080";
 var style = styles.QUBERT;
 
+var isPacMan = false;
+
+// the index of the current video in the path
+var currentIndex = 0;
+
 $(document).ready(function () {
     //the current google map
     var map;
@@ -14,8 +19,6 @@ $(document).ready(function () {
 
     //a list of video objects which form the path the user is currently in
     var videoPath = [];
-    // the index of the current video in the path
-    var currentIndex = 0;
 
     //variable for checking which videoplayer you're in
     //there are two for smooth siwtching between videos
@@ -29,14 +32,17 @@ $(document).ready(function () {
 
     var spinner;
 
+
     google.maps.event.addDomListener(window, 'load', initialize);
 
     $("#stylesheet").attr("href", style.styleSheet);
     $("#pacmanToggle").change(function () {
         if (this.checked) {
             setStyle(styles.PACMAN);
+            isPacMan = true;
         } else {
             setStyle(styles.QUBERT);
+            isPacMan = false;
         }
     });
 
@@ -192,7 +198,6 @@ $(document).ready(function () {
             });
         }
 
-        console.log("id:" + id);
         $.get(getURLforIntersections(id), function (data) {
             console.log("replies:" + data.videos.length);
             for (var i = 0; i < data.videos.length; i++) {
@@ -362,7 +367,7 @@ $(document).ready(function () {
             getNextVideo();
             return;
         }
-        getCurrentDistance();
+        getCurrentDistance(map);
         setTimeout(onVideoProgress, 1000);
     }
 
@@ -495,8 +500,8 @@ $(document).ready(function () {
         }
     }
 
-    function getCurrentDistance() {
-        currentDistance = currentVideo.getPolylineUptoPositionMarker().Distance();
+    function getCurrentDistance(map) {
+        currentDistance = currentVideo.getPolylineUptoPositionMarker(map).Distance();
         updateDistanceOnGUI();
     }
 
@@ -507,7 +512,11 @@ $(document).ready(function () {
     }
 
     function updateDistanceOnGUI() {
-        $("#score").text("You walked " + Math.round(previousDistance + currentDistance) + " m");
+        var amount = Math.round(previousDistance + currentDistance);
+        if(isPacMan)
+            $("#score").text("You ate " + amount + " points");
+        else
+        $("#score").text("You walked " + amount + "m");
     }
 
     function resetCurrentDistance() {
@@ -550,6 +559,9 @@ var Video = function (id, lat, lng) {
     this.splitPolyline = null;
     //the time at which the video is split
     this.splitTime = null;
+
+    //the line behind the positionmarker, pacman has eaten it already.
+    this.pacManEatenPolyline = null;
 
     //the list of the video's intersection
     this.intersectionVideos = [];
@@ -692,24 +704,20 @@ var Video = function (id, lat, lng) {
                 splitpoints.push(new google.maps.LatLng(a[1], a[0]));
 
         }
-        var lineSymbol = {
-            path: 'M 0,0 0,0.01',
-            strokeOpacity: 1,
-            scale: 5
-        };
 
-        self.polyline = new google.maps.Polyline(style.pathPolyline(map, waypoints));
+        if (isPacMan && self.videoPathDepth < currentIndex)
+            self.polyline = new google.maps.Polyline(style.pacManEatenPolyline(map, waypoints));
+        else
+            self.polyline = new google.maps.Polyline(style.pathPolyline(map, waypoints));
         if (self.splitPoint != null) {
             self.splitPolyline = new google.maps.Polyline(style.splitPolyline(map, splitpoints));
         }
     };
 
+
     //remove the path components
     this.removePath = function () {
-        if (self.polyline != null) {
-            self.polyline.setMap(null);
-            self.polyline = null;
-        }
+        self.removePolyline();
         if (self.splitPolyline != null) {
             self.splitPolyline.setMap(null);
             self.splitPolyline = null;
@@ -911,32 +919,63 @@ var Video = function (id, lat, lng) {
             self.intersectionMarker.setMap(null);
             self.intersectionMarker = null;
         }
-    }
+    };
 
-    this.getPolylineUptoPositionMarker = function()
-    {
+    this.getPolylineUptoPositionMarker = function (map) {
         var path = [];
+        var afterpath = null;
+        if (isPacMan) {
+            self.drawPath();
+            afterpath = [];
+        }
+
+        var isafter = false;
         var polylinePath = self.polyline.getPath().getArray();
-        console.log(polylinePath);
         for (var i = 0; i < polylinePath.length; i++) {
-            console.log(polylinePath[i]);
-            var latLng1 = new google.maps.LatLng(polylinePath[i].lat(),polylinePath[i].lng());
-            path.push(latLng1);
-            if (i < polylinePath.length - 1) {
-                var latLng2 = new google.maps.LatLng(polylinePath[i+1].lat(),polylinePath[i+1].lng());
+            var latLng1 = new google.maps.LatLng(polylinePath[i].lat(), polylinePath[i].lng());
+            if (!isafter)
+                path.push(latLng1);
+            else
+                afterpath.push(latLng1);
+            if (!isafter && i < polylinePath.length - 1) {
+                var latLng2 = new google.maps.LatLng(polylinePath[i + 1].lat(), polylinePath[i + 1].lng());
 
                 var polyline = new google.maps.Polyline({
                     path: [latLng1, latLng2]
                 });
 
                 //if the video has been an intersection and you haven't reached the intersectionpoint yet, continue
-                if (google.maps.geometry.poly.containsLocation(self.positionMarker.position, polyline))
-                    break;
+                if (google.maps.geometry.poly.containsLocation(self.positionMarker.position, polyline)) {
+                    path.push(self.positionMarker.position);
+                    isafter = true;
+                    if (!isPacMan)
+                        break;
+                    afterpath.push(self.positionMarker.position);
+                }
             }
         }
+        if (isPacMan) {
+            self.removePolyline();
+            self.polyline = new google.maps.Polyline(style.pathPolyline(map, afterpath));
+            self.pacManEatenPolyline = new google.maps.Polyline(style.pacManEatenPolyline(map, path));
+            return self.pacManEatenPolyline;
+        }
+
+
         return new google.maps.Polyline({
             path: path
         });
-    }
+    };
+
+    this.removePolyline = function () {
+        if (self.polyline != null) {
+            self.polyline.setMap(null);
+            self.polyline = null;
+        }
+        if (self.pacManEatenPolyline != null) {
+            self.pacManEatenPolyline.setMap(null);
+            self.pacManEatenPolyline = null;
+        }
+    };
 
 };
