@@ -1,5 +1,5 @@
 var url = "http://127.0.0.1:8080";
-var style = styles.QUBERT;
+var style = styles.DEFAULT;
 
 $(document).ready(function () {
     //the current google map
@@ -33,7 +33,6 @@ $(document).ready(function () {
         var mapOptions = {
             center: {lat: 48.1510642, lng: 11.5925221},
             zoom: 19,
-            //mapTypeId: google.maps.MapTypeId.SATELLITE,
             heading: 10,
             tilt: 45,
             styles: style.map
@@ -623,26 +622,9 @@ var Video = function (id, lat, lng) {
             scale: 5
         };
 
-        self.polyline = new google.maps.Polyline({
-            path: waypoints,
-            strokeColor: "#FFFFFF",
-            strokeOpacity: 0,
-            strokeWeight: 5,
-            icons: [{
-                icon: lineSymbol,
-                offset: '0',
-                repeat: '8px'
-            }],
-            map: map
-        });
+        self.polyline = new google.maps.Polyline(style.pathPolyline(map, waypoints));
         if (self.splitPoint != null) {
-            self.splitPolyline = new google.maps.Polyline({
-                path: splitpoints,
-                strokeColor: "#FFFFFF",
-                strokeOpacity: 0.5,
-                strokeWeight: 3,
-                map: map
-            });
+            self.splitPolyline = new google.maps.Polyline(style.splitPolyline(map, splitpoints));
         }
     };
 
@@ -809,13 +791,7 @@ var Video = function (id, lat, lng) {
             map: map
         });
 
-        self.intersectionPolyline = new google.maps.Polyline({
-            path: routePoints,
-            strokeWeight: 3,
-            strokeColor: "#FFFFFF",
-            strokeOpacity: 0.5,
-            map: map
-        });
+        self.intersectionPolyline = new google.maps.Polyline(style.intersectionPolyline(map, routePoints));
     };
 
     //give intersection marker & intersection polyline the callback when they are clicked

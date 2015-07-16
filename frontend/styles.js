@@ -5,6 +5,33 @@ var styles = {
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo.png",
         positionIcon: "img/position.png",
+        pathPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "blue",
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: map
+            }
+        },
+        splitPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                strokeWeight: 3,
+                map: map
+            }
+        },
+        intersectionPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                map: map
+            }
+        },
         map: []
     },
 
@@ -13,6 +40,33 @@ var styles = {
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo.png",
         positionIcon: "img/position.png",
+        pathPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "#DF4949",
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: map
+            }
+        },
+        splitPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                strokeWeight: 3,
+                map: map
+            }
+        },
+        intersectionPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                map: map
+            }
+        },
         map: [
             {
                 "featureType": "landscape.natural",
@@ -115,6 +169,42 @@ var styles = {
         intersectionIcon: "img/icon_intersection.png",
         logo: "img/logo_pacman.png",
         positionIcon: "img/player.gif",
+        pathPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0,
+                strokeWeight: 5,
+                icons: [{
+                    icon: {
+                        path: 'M 0,0 0,0.01',
+                        strokeOpacity: 1,
+                        scale: 5
+                    },
+                    offset: '0',
+                    repeat: '8px'
+                }],
+                map: map
+            }
+        },
+        splitPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                strokeWeight: 3,
+                map: map
+            }
+        },
+        intersectionPolyline: function (map, waypoints) {
+            return {
+                path: waypoints,
+                strokeWeight: 3,
+                strokeColor: "#FFFFFF",
+                strokeOpacity: 0.5,
+                map: map
+            }
+        },
         map: [
             {
                 "featureType": "all",
