@@ -624,9 +624,16 @@ var Video = function (id, lat, lng) {
                 //if the video has been an intersection and you haven't reached the intersectionpoint yet, continue
                 if (!afterIntersection && !google.maps.geometry.poly.containsLocation(self.intersectionMarker.position, polyline))
                     continue;
+                else if (!afterIntersection){
 
-                //it has reached the intersection point to continue
-                afterIntersection = true;
+                    //it has reached the intersection point to continue
+                    afterIntersection = true;
+                    waypoints.push(self.intersectionMarker.position);
+                    continue;
+                }
+
+
+
 
                 //if the video is split, check if the splitpoint is reached
                 //if yes, split the video here
