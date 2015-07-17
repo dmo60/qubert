@@ -42,8 +42,8 @@ $(document).ready(function () {
     google.maps.event.addDomListener(window, 'load', initialize);
 
     $("#stylesheet").attr("href", style.styleSheet);
-    $("#pacmanToggle").change(function () {
-        if (this.checked) {
+    $("#pacman").click(function () {
+        if (!isPacMan) {
             setStyle(styles.PACMAN);
             isPacMan = true;
             myAudio.play();
@@ -56,6 +56,12 @@ $(document).ready(function () {
 
     spinner = $("#spinner").spinner({min: 0});
     minDistance = spinner[0].value;
+
+    $("#updateDb").click(function() {
+        $.get(url + "/mongo/init", function(data) {
+            alert(data);
+        })
+    });
 
     setPlaying(false);
 
@@ -566,7 +572,7 @@ $(document).ready(function () {
     }
 
     function getCurrentDistance(map) {
-        var polyline = currentVideo.getPolylineUptoPositionMarker();
+        var polyline = currentVideo.getPolylineUptoPositionMarker(map);
         if (polyline != null) {
             currentDistance = polyline.Distance();
             updateDistanceOnGUI();
@@ -1031,6 +1037,7 @@ var Video = function (id, lat, lng) {
         }
         if (isPacMan) {
             self.removePolyline();
+            console.log("HIER!!!!!!!!!!!!!!");
             self.polyline = new google.maps.Polyline(style.pathPolyline(map, afterpath));
             self.pacManEatenPolyline = new google.maps.Polyline(style.pacManEatenPolyline(map, path));
             return self.pacManEatenPolyline;
