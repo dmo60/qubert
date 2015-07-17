@@ -191,7 +191,6 @@ $(document).ready(function () {
         videoPath.push(currentVideo);
         //video.drawPath(map);
         //currentVideo.drawPositionMarker(map);
-        setGlobalVideoCursor(currentVideo.position);
         currentVideo.videoPathDepth = 0;
 
         drawVideoPath();
@@ -201,6 +200,7 @@ $(document).ready(function () {
 
         updateCenter(video.position);
         showVideoAtTime(currentVideo.id, 0);
+        setGlobalVideoCursor(currentVideo.position);
     }
 
     //clicked on map to reset
