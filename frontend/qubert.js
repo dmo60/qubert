@@ -40,8 +40,8 @@ $(document).ready(function () {
     google.maps.event.addDomListener(window, 'load', initialize);
 
     $("#stylesheet").attr("href", style.styleSheet);
-    $("#pacmanToggle").change(function () {
-        if (this.checked) {
+    $("#pacman").click(function () {
+        if (!isPacMan) {
             setStyle(styles.PACMAN);
             isPacMan = true;
         } else {

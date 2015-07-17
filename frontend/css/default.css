@@ -79,3 +79,8 @@ a {
 p {
     line-height: 150%;
 }
+
+#pacman {
+    width: 20px;
+    height: 20px;
+}
