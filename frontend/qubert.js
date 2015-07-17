@@ -2,6 +2,7 @@ var url = "http://127.0.0.1:8080";
 var style = styles.QUBERT;
 
 var isPacMan = false;
+var myAudio;
 
 // the index of the current video in the path
 var currentIndex = 0;
@@ -11,6 +12,7 @@ var currentIndex = 0;
 var globalVideoCursor;
 
 $(document).ready(function () {
+    myAudio = $("#audio1").get(0);
     //the current google map
     var map;
     //the html 5 video
@@ -44,9 +46,11 @@ $(document).ready(function () {
         if (this.checked) {
             setStyle(styles.PACMAN);
             isPacMan = true;
+            myAudio.play();
         } else {
             setStyle(styles.QUBERT);
             isPacMan = false;
+            myAudio.stop();
         }
     });
 
