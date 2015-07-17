@@ -431,8 +431,12 @@ $(document).ready(function () {
 
     function onVideoProgress() {
         if (video.paused || video.ended) {
+            if(isPacMan)myAudio2.pause();
             return;
+
         }
+        if(isPacMan&&myAudio2.paused)myAudio2.play();
+
         //currentVideo.updatePositionMarker(Math.round(video.currentTime));
         updateGlobalVideoCursor();
         //if the video is split, check if the current time is after the split
