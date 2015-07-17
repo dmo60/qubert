@@ -110,7 +110,7 @@ $(document).ready(function () {
             return;
         }
 
-        if(currentVideo.trajectory==null) {
+        if (currentVideo.trajectory == null) {
             globalVideoCursor.setPosition(currentVideo.position);
             return;
         }
@@ -140,14 +140,6 @@ $(document).ready(function () {
         }
     }
 
-    function rotateHeading(deg) {
-        //Only possible at enough Zoom and Tilt 45 and map.Satellite
-        var heading = map.getHeading();
-        console.log(heading);
-        map.setHeading(heading + deg);
-
-    }
-
     function requestVideos() {
         $.get(getURLfromBounds(), function (data) {
             $.each(data, function () {
@@ -157,6 +149,7 @@ $(document).ready(function () {
                 }
 
                 var video = new Video(this.id, this.lat, this.lng);
+                video.setTrajectory(this.trajectory.coordinates);
                 if (currentVideo == null) {
                     video.drawMarker(map);
                 }
@@ -173,7 +166,6 @@ $(document).ready(function () {
 
         setPlaying(true);
         currentVideo = video;
-
 
 
         //reset the videopath and push the clicked video onto it
@@ -202,6 +194,11 @@ $(document).ready(function () {
 
             video.pause();
 
+            $("video").attr("src", "")
+                .each(function () {
+                    this.currentTime = 0;
+                });
+
             videoPath.forEach(function (vid) {
                 vid.removePath();
                 //vid.removePositionMarker();
@@ -218,11 +215,6 @@ $(document).ready(function () {
             currentVideo = null;
             videoPath = [];
             showAllVideos();
-
-            //$("#overlay").animate({
-            //    width: "0%"
-            //}, 250);
-
         }
 
 
@@ -467,7 +459,6 @@ $(document).ready(function () {
         }
 
 
-
         //draw the new path.
         drawVideoPath();
     }
@@ -572,7 +563,7 @@ $(document).ready(function () {
 
     function getCurrentDistance(map) {
         var polyline = currentVideo.getPolylineUptoPositionMarker();
-        if(polyline!=null) {
+        if (polyline != null) {
             currentDistance = polyline.Distance();
             updateDistanceOnGUI();
         }
@@ -586,10 +577,10 @@ $(document).ready(function () {
 
     function updateDistanceOnGUI() {
         var amount = Math.round(previousDistance + currentDistance);
-        if(isPacMan)
+        if (isPacMan)
             $("#score").text("You ate " + amount + " points");
         else
-        $("#score").text("You walked " + amount + "m");
+            $("#score").text("You walked " + amount + "m");
     }
 
     function resetCurrentDistance() {
@@ -797,10 +788,6 @@ var Video = function (id, lat, lng) {
         }
     };
 
-    this.loadTrajectory = function(callback,args) {
-        loadTrajectory(callback,args);
-    }
-
     //load Trajectories from the backend
     function loadTrajectory(callback, args) {
         var pathUrl = url + "/videopath?videoID=" + self.id;
@@ -814,22 +801,22 @@ var Video = function (id, lat, lng) {
     }
 
     this.drawPositionMarker = function (map) {
-   /*     var image = {
-            url: "img/player.gif",
-            optimized: false,
-            size: new google.maps.Size(45, 45),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(22.5, 22.5)
-        };*/
+        /*     var image = {
+         url: "img/player.gif",
+         optimized: false,
+         size: new google.maps.Size(45, 45),
+         origin: new google.maps.Point(0, 0),
+         anchor: new google.maps.Point(22.5, 22.5)
+         };*/
 
         /*self.positionMarker = new google.maps.Marker({
 
-            optimized: false,
-            draggable: false,
-            icon: style.positionIcon,
-            position: self.position,
-            map: map
-        });*/
+         optimized: false,
+         draggable: false,
+         icon: style.positionIcon,
+         position: self.position,
+         map: map
+         });*/
         //setGlobalVideoCursor(self.position);
     };
 
@@ -1010,8 +997,8 @@ var Video = function (id, lat, lng) {
             afterpath = [];
         }
 
-        if(self.polyline==null)
-        return null;
+        if (self.polyline == null)
+            return null;
 
         var isafter = false;
         var polylinePath = self.polyline.getPath().getArray();
