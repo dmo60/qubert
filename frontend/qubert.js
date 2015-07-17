@@ -102,7 +102,9 @@ $(document).ready(function () {
                 size: new google.maps.Size(25, 25)
             };
         }
-
+        if(globalVideoCursor!=null) {
+            globalVideoCursor.position=latLng;
+        } else
         globalVideoCursor = new google.maps.Marker({
             icon: image,
             optimized: false,
