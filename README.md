@@ -10,13 +10,13 @@ Die App ist unter folgender Adresse zu erreichen: [http://app-qubertmedia.rhclou
 
 Das Ziel des Projekts war, die in der MediaQ-Datenbank verfügbaren Videos in geeigneter Weise aufzubereiten und miteinander in Beziehung zu setzten, sodass das Entdecken und Erkunden eines Ortes für den Nutzer interessant und kurzweilig ist.
 
-Daraus entwickelte sich die Idee, dem Nutzer zu ermöglichen, während der Wiedergabe eines Videos in andere Videos zu springen, sobald sich deren Pfade überschneiden. Der Nutzer kann durch Auswahl der Kreuzungspunkte mehrere kurze Videos zu einem langen Videopfad "zusammenklicken" und so auf "Wanderung" gehen. Zusätzlich wurde eine spielerisches Element integriert. (TODO: weiter ausführen)
+Daraus entwickelte sich die Idee, dem Nutzer zu ermöglichen, während der Wiedergabe eines Videos in andere Videos zu springen, sobald sich deren Pfade überschneiden. Der Nutzer kann durch Auswahl der Kreuzungspunkte mehrere kurze Videos zu einem langen Videopfad "zusammenklicken" und so auf "Wanderung" gehen. Zusätzlich wurde eine spielerisches Element integriert.
 
 ## Implementierung
 
 Für das Server-Backend der App wurde [NodeJS](https://nodejs.org/) zusammen mit [Express](http://expressjs.com/) und [MongoDB](https://www.mongodb.org/) verwendet. Das Frontend nutzt [jQuery](https://jquery.com/) und die [Google Maps API](https://developers.google.com/maps/documentation/javascript/?hl=de).
 
-Die App wird auf [Openshift](https://openshift.redhat.com) gehostet.
+Die App wird auf [Openshift](https://openshift.redhat.com) gehostet, die MongoDB Datenbank auf [MongoLab](https://mongolab.com/).
 
 ## Backend
 
@@ -140,9 +140,9 @@ Auf den Attributen `location` und `trajectory` müssen Anfragen effizient durchf
 Zur Fehlerbehebung werden zunächst die Abstände zwischen allen Punkten in einem Trajectory berechnet. Dabei zeigten sich hauptsächlich zwei Fehler:
 
 - *Der Abstand ist null:* <br>
-Dieser Fehler tritt auf, wenn dem Endgerät keine GPS-Daten vorlagen und stattdessen die Position der Funkzelle gespeichert wurde. 
- 
-- *Der Abstand ist unverhältnismäßig groß:* <br> 
+Dieser Fehler tritt auf, wenn dem Endgerät keine GPS-Daten vorlagen und stattdessen die Position der Funkzelle gespeichert wurde.
+
+- *Der Abstand ist unverhältnismäßig groß:* <br>
 Dies tritt auf wenn das mobile Endgerät, mit dem das Video aufgezeichnet wurde keine korrekten GPS-Daten mehr bzw. wieder korrekte GPS-Daten empfangen hat. Die meisten dieser Fehler treten einzeln auf, d.h. im Koordinaten-Array ist ein einzelner fehlerhafter Punkt ist von zwei korrekten Punkten umgeben.
 
 Gleichzeitig wird aus allen Abständen, die nicht null sind, ein Durchschnittswert berechnet. Dieser Wert wird bei der anschließenden Suche nach fehlerhaften Koordinaten als Obergrenze für den Abstand zweier Wegpunkte genutzt. Bei dieser Suche wurden zwei Szenarien betrachtet:
@@ -162,7 +162,31 @@ Treten zu hohe Abstände in der Mitte des Videos auf, d.h. nachdem mindestens ei
 
 ### API
 
-blablabla (Timo)
+Das Server-Backend stellt folgende API zur Verfügung:
+
+`/videos?leftTop=<lat>,<lng>&rightBottom=<lat>,<lng>&minDistance=<min>` <br/>
+Liefert alle Videos, deren Startpunkt in der gegebenen bounding box liegen und mindestens eine Länge von *minDistance* haben.
+
+Parameter:
+ * *leftTop*: Koordinaten der linken oberen Ecke
+ * *rightBottom*: Koordinaten der rechten unteren Ecke
+ * *minDistance*: Minimale Pfadlänge der Videos
+
+`/videopath?videoID=<id>` <br/>
+Gibt die Trajectory einer bestimmten Videos zurück.
+
+Parameter:
+ * *videoID*: Die id des gewünschten Videos
+
+`/intersections?videoID=<id>&minDistance=<min>` <br/>
+Sucht alle Videos, deren Pfad sich mit dem Pfad des Anfragevideos schneidet und deren Pfadlänge mindestens *minDistance* beträgt. Die Antwort besteht aus zwei Arrays: Eine List von Videoobjekten, für die Kreuzungen gefunden wurden, sowie die Liste mit den zugehörigen Schnittpunkten. Für jedes Video wird genau ein Schnittpunkt berechnet, auch wenn sich die Pfade möglicherweise mehrmals schneiden.
+
+Parameter:
+ * *videoID*: Die id des Anfragevideos
+ * *minDistance*: Die geforderte minimale Pfadlänge der Schnittvideos
+
+`/mongo/init` <br/>
+Initialisiert bzw. aktualisiert die MongoDB Datenbank. Alle vorhandenen Dokumente werden zunächst gelöscht und anschließend neu aus der MediaQ-Datenbank geladen, aufbereitet und indiziert. Siehe Abschnitt [MongoDB](#mongodb).
 
 ## Frontend
 
