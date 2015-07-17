@@ -164,7 +164,7 @@ Treten zu hohe Abstände in der Mitte des Videos auf, d.h. nachdem mindestens ei
 
 Das Server-Backend stellt folgende API zur Verfügung:
 
-`/videos?leftTop=<lat>,<lng>&rightBottom=<lat>,<lng>&minDistance=<min>` <br/>
+**`/videos?leftTop=<lat>,<lng>&rightBottom=<lat>,<lng>&minDistance=<min>`** <br/>
 Liefert alle Videos, deren Startpunkt in der gegebenen bounding box liegen und mindestens eine Länge von *minDistance* haben.
 
 Parameter:
@@ -172,20 +172,20 @@ Parameter:
  * *rightBottom*: Koordinaten der rechten unteren Ecke
  * *minDistance*: Minimale Pfadlänge der Videos
 
-`/videopath?videoID=<id>` <br/>
+**`/videopath?videoID=<id>`** <br/>
 Gibt die Trajectory einer bestimmten Videos zurück.
 
 Parameter:
  * *videoID*: Die id des gewünschten Videos
 
-`/intersections?videoID=<id>&minDistance=<min>` <br/>
+**`/intersections?videoID=<id>&minDistance=<min>`** <br/>
 Sucht alle Videos, deren Pfad sich mit dem Pfad des Anfragevideos schneidet und deren Pfadlänge mindestens *minDistance* beträgt. Die Antwort besteht aus zwei Arrays: Eine List von Videoobjekten, für die Kreuzungen gefunden wurden, sowie die Liste mit den zugehörigen Schnittpunkten. Für jedes Video wird genau ein Schnittpunkt berechnet, auch wenn sich die Pfade möglicherweise mehrmals schneiden.
 
 Parameter:
  * *videoID*: Die id des Anfragevideos
  * *minDistance*: Die geforderte minimale Pfadlänge der Schnittvideos
 
-`/mongo/init` <br/>
+**`/mongo/init`** <br/>
 Initialisiert bzw. aktualisiert die MongoDB Datenbank. Alle vorhandenen Dokumente werden zunächst gelöscht und anschließend neu aus der MediaQ-Datenbank geladen, aufbereitet und indiziert. Siehe Abschnitt [MongoDB](#mongodb).
 
 ## Frontend
