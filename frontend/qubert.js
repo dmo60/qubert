@@ -53,6 +53,12 @@ $(document).ready(function () {
     spinner = $("#spinner").spinner({min: 0});
     minDistance = spinner[0].value;
 
+    $("#updateDb").click(function() {
+        $.get(url + "/mongo/init", function(data) {
+            alert(data);
+        })
+    });
+
     setPlaying(false);
 
     function initialize() {
