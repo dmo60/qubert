@@ -137,6 +137,8 @@ Auf den Attributen `location` und `trajectory` müssen Anfragen effizient durchf
 
 ### Outlier Detection / Trajectory Smoothing
 
+Im der mediaQ App werden Trajectories geglättet, indem die accuracy-Werte der GPS-Daten berücksichtigt werden. In die Datenbank werden dennoch alle Standortdaten ungefiltert hochgeladen, sodass der Großteil der Pfade unbrauchbar wird. Gerade unsere Projektidee kann jedoch nur funktionieren, wenn die Pfade zumindest einigermaßen korrekt vorliegen.
+
 Zur Fehlerbehebung werden zunächst die Abstände zwischen allen Punkten in einem Trajectory berechnet. Dabei zeigten sich hauptsächlich zwei Fehler:
 
 - *Der Abstand ist null:* <br>
@@ -145,7 +147,7 @@ Dieser Fehler tritt auf, wenn dem Endgerät keine GPS-Daten vorlagen und stattde
 - *Der Abstand ist unverhältnismäßig groß:* <br>
 Dies tritt auf wenn das mobile Endgerät, mit dem das Video aufgezeichnet wurde keine korrekten GPS-Daten mehr bzw. wieder korrekte GPS-Daten empfangen hat. Die meisten dieser Fehler treten einzeln auf, d.h. im Koordinaten-Array ist ein einzelner fehlerhafter Punkt ist von zwei korrekten Punkten umgeben.
 
-Gleichzeitig wird aus allen Abständen, die nicht null sind, ein Durchschnittswert berechnet. Dieser Wert wird bei der anschließenden Suche nach fehlerhaften Koordinaten als Obergrenze für den Abstand zweier Wegpunkte genutzt. Bei dieser Suche wurden zwei Szenarien betrachtet:
+Gleichzeitig wird aus allen Abständen, die nicht null sind, ein Durchschnittswert berechnet. Um dabei bereits Outlier auszufiltern, wird zu jedem Punkt der Abstand zu Vorgänger und Nachfolger berechnet und der kleinere dieser Werte verwendet. Dieser Wert wird bei der anschließenden Suche nach fehlerhaften Koordinaten als Obergrenze für den Abstand zweier Wegpunkte genutzt. Bei dieser Suche wurden zwei Szenarien betrachtet:
 
 - *Die fehlerhaften Daten befinden sich am Anfang des Videos:* <br>
 Dieser Fehler tritt meistens auf, wenn die filmende Person sich zuvor z.B. in einem Gebäude befunden hat. Die Abstände zum jeweils nächsten Wegpunkt werden mit dem zuvor errechneten Durchschnittswert verglichen. Die Anzahl der Abstände, die darüber liegen oder null sind, werden aufsummiert. Sobald ein Abstand (Punkt A nach B) wieder darunter liegt und nicht null ist, wird A als korrekt angesehen. Anschließend werden die Punkte vor A berechnet, indem der Vektor BA entsprechend der Anzahl an falschen Punkten wiederholt an A angehängt wird. Dies ist wichtig, um die Anzahl der Trajectory-Punkte konstant zu halten.<br>Ist die Anzahl der fehlerhaften Punkte am Anfang jedoch sehr hoch, würden dadurch wieder falsche Pfade entstehen. Deswegen werden auf diese Weise höchstens fünf künstliche Punkte berechnet. Sollten sich noch mehr fehlerhafte Punkte im Trajectory befinden, werden diese alle mit dem letzten (fünften) berechneten Punkt überschrieben.<br>Abschließend wird der letzte berechnete Punkt als Startpunkt des gesamten Videos festgelegt.

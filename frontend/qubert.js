@@ -40,8 +40,8 @@ $(document).ready(function () {
     google.maps.event.addDomListener(window, 'load', initialize);
 
     $("#stylesheet").attr("href", style.styleSheet);
-    $("#pacmanToggle").change(function () {
-        if (this.checked) {
+    $("#pacman").click(function () {
+        if (!isPacMan) {
             setStyle(styles.PACMAN);
             isPacMan = true;
         } else {
@@ -52,6 +52,12 @@ $(document).ready(function () {
 
     spinner = $("#spinner").spinner({min: 0});
     minDistance = spinner[0].value;
+
+    $("#updateDb").click(function() {
+        $.get(url + "/mongo/init", function(data) {
+            alert(data);
+        })
+    });
 
     setPlaying(false);
 
