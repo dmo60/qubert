@@ -190,4 +190,4 @@ Initialisiert bzw. aktualisiert die MongoDB Datenbank. Alle vorhandenen Dokument
 
 ## Frontend
 
-blabla (Fabi/Alex)
+Die von der Datenbank geladenen Videos werden in Videoobjekte geladen und mit Hilfe der Google Maps API v3 auf einer Karte visualisiert. Wenn der Benutzer nun Abzweigungen angklickt, werden aus den verschiedenen Videoobjekten ein Pfad gebildet. Dabei verlassen wir uns größtenteils auf Google Maps eigene Geometriebibliotheken um Standorte, Distanzen und Schnittpunkte relativ zum abgespielten VIdeo zu berechnen.
