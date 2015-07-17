@@ -2,8 +2,9 @@ video::-webkit-media-controls-fullscreen-button {
     display: none;
 }
 
-*{font-family: 'Montserrat', sans-serif;
-   }
+* {
+    font-family: 'Montserrat', sans-serif;
+}
 
 html, body {
     height: 100%;
@@ -16,17 +17,17 @@ html, body {
     width: auto;
 }
 
-#description{
-   padding: 5px;
+#description {
     color: white;
+    margin-bottom: 100px;
 }
 
 #overlay {
     float: right;
     height: 100%;
     width: 25%;
-        background-color:#373736;
-    padding: 10px;
+    background-color: #373736;
+    padding: 20px;
 }
 
 video {
@@ -72,4 +73,8 @@ label {
 
 a {
     color: #DF4A4A;
+}
+
+p {
+    line-height: 150%;
 }
