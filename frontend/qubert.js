@@ -2,7 +2,9 @@ var url = "http://127.0.0.1:8080";
 var style = styles.QUBERT;
 
 var isPacMan = false;
-var myAudio;
+var myAudio
+var myAudio2;
+
 
 // the index of the current video in the path
 var currentIndex = 0;
@@ -13,6 +15,8 @@ var globalVideoCursor;
 
 $(document).ready(function () {
     myAudio = $("#audio1").get(0);
+    myAudio2 = $("#audio2").get(0);
+
     //the current google map
     var map;
     //the html 5 video
@@ -50,7 +54,7 @@ $(document).ready(function () {
         } else {
             setStyle(styles.QUBERT);
             isPacMan = false;
-            myAudio.stop();
+            myAudio.pause();
         }
     });
 
@@ -177,6 +181,7 @@ $(document).ready(function () {
         console.log("videoMarkerClicked()" + video);
 
         setPlaying(true);
+        if(isPacMan)myAudio2.play();
         currentVideo = video;
 
 
@@ -202,6 +207,8 @@ $(document).ready(function () {
     function onMapClicked() {
         resetDistance();
         setPlaying(false);
+        if(isPacMan)myAudio2.pause();
+
 
         if (currentVideo != null) {
 
@@ -428,8 +435,13 @@ $(document).ready(function () {
 
     function onVideoProgress() {
         if (video.paused || video.ended) {
+            if(isPacMan)myAudio2.pause();
+
             return;
+
         }
+        if(isPacMan&&myAudio2.paused)myAudio2.play();
+
         //currentVideo.updatePositionMarker(Math.round(video.currentTime));
         updateGlobalVideoCursor();
         //if the video is split, check if the current time is after the split
