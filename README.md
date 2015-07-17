@@ -173,7 +173,7 @@ Parameter:
  * *minDistance*: Minimale Pfadlänge der Videos
 
 **`/videopath?videoID=<id>`** <br/>
-Gibt die Trajectory einer bestimmten Videos zurück.
+Gibt die Trajectory eines bestimmten Videos zurück.
 
 Parameter:
  * *videoID*: Die id des gewünschten Videos
