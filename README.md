@@ -4,7 +4,7 @@
 
 *wanderQ* wurde im Sommersemester 2015 an der LMU München im Rahmen des Seminars ["MediaQ: Practical Seminar on Big Data for Social Media"](http://www.dbs.ifi.lmu.de/cms/Hauptseminar_%22MediaQ:_Practical_Seminar_on_Big_Data_for_Social_Media%22) entwickelt.
 
-Die App ist unter folgender Adresse zu erreichen: [http://app-qubertmedia.rhcloud.com/]()
+Die App ist unter folgender Adresse zu erreichen: [http://app-qubertmedia.rhcloud.com/](http://app-qubertmedia.rhcloud.com/)
 
 ## Idee
 
