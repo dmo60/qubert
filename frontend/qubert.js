@@ -3,6 +3,8 @@ var style = styles.QUBERT;
 
 var isPacMan = false;
 var myAudio;
+var myAudio2;
+
 
 // the index of the current video in the path
 var currentIndex = 0;
@@ -13,6 +15,8 @@ var globalVideoCursor;
 
 $(document).ready(function () {
     myAudio = $("#audio1").get(0);
+    myAudio2 = $("#audio2").get(0);
+
     //the current google map
     var map;
     //the html 5 video
@@ -175,6 +179,7 @@ $(document).ready(function () {
         console.log("videoMarkerClicked()" + video);
 
         setPlaying(true);
+        if(isPacMan)myAudio2.play();
         currentVideo = video;
 
 
@@ -199,6 +204,7 @@ $(document).ready(function () {
     //clicked on map to reset
     function onMapClicked() {
         setPlaying(false);
+        if(isPacMan)myAudio2.pause();
 
         if (currentVideo != null) {
 
