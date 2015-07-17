@@ -198,6 +198,7 @@ $(document).ready(function () {
 
     //clicked on map to reset
     function onMapClicked() {
+        resetDistance();
         setPlaying(false);
 
         if (currentVideo != null) {
@@ -1037,7 +1038,6 @@ var Video = function (id, lat, lng) {
         }
         if (isPacMan) {
             self.removePolyline();
-            console.log("HIER!!!!!!!!!!!!!!");
             self.polyline = new google.maps.Polyline(style.pathPolyline(map, afterpath));
             self.pacManEatenPolyline = new google.maps.Polyline(style.pacManEatenPolyline(map, path));
             return self.pacManEatenPolyline;
