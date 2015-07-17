@@ -310,7 +310,7 @@ $(document).ready(function () {
             if (videoPath[i].videoPathDepth > currentIndex) {
                 videoPath[i].removeSplitPoint();
                 //videoPath[i].removePositionMarker();
-                hideGlobalVideoCursor();
+                //hideGlobalVideoCursor();
                 videoPath[i].removePath();
                 videoPath[i].removeIntersectionPolyline();
                 videoPath.splice(i, 1);
